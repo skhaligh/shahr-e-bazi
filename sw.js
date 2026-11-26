@@ -1,8 +1,9 @@
 // شهرِ بازی service worker.
 // Site pages: fresh from the network when online, saved copy when offline.
-// Games and fonts: saved copy first (they are big and rarely change), refreshed in the background.
+// A game's own page: fresh when online too, so a fix reaches the kids the first time they open it.
+// A game's other files and fonts: saved copy first (big, rarely change), refreshed in the background.
 // Bump VERSION whenever site files change, so installed copies pick up the new ones.
-const VERSION = 'v2';
+const VERSION = 'v3';
 const SHELL_CACHE = 'shahr-shell-' + VERSION;
 const GAMES_CACHE = 'shahr-games'; // same name as in js/app.js
 
@@ -48,7 +49,10 @@ self.addEventListener('fetch', (event) => {
 
   const scope = new URL(self.registration.scope).pathname;
   const path = url.pathname.slice(scope.length);
-  if (path.startsWith('games/') || path.startsWith('fonts/')) event.respondWith(savedFirst(req));
+  const stored = path.startsWith('games/') || path.startsWith('fonts/');
+  const isPage = req.mode === 'navigate' || req.destination === 'document' || req.destination === 'iframe';
+  if (stored && isPage) event.respondWith(networkFirst(req, GAMES_CACHE));
+  else if (stored) event.respondWith(savedFirst(req));
   else event.respondWith(networkFirst(req));
 });
 
@@ -66,8 +70,8 @@ async function savedFirst(req) {
   return fresh;
 }
 
-async function networkFirst(req) {
-  const cache = await caches.open(SHELL_CACHE);
+async function networkFirst(req, cacheName = SHELL_CACHE) {
+  const cache = await caches.open(cacheName);
   try {
     const res = await fetch(req);
     if (res.ok) cache.put(req, res.clone());

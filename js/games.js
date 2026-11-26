@@ -131,7 +131,8 @@ export const GAMES = [
     id: 'aseman-peyma',
     color: '#18245A',
     langs: ['fa'],
-    path: 'games/aseman-peyma/',
+    // ?r=2: a new address for the fixed build, so devices that saved the broken one fetch this one.
+    path: 'games/aseman-peyma/?r=2',
     title: { fa: 'آسمان‌پیما', en: 'Aseman-Peyma' },
     blurb: {
       fa: 'مأموریت آموزشی خلبانی: چک‌لیست را انجام بده و از میان حلقه‌ها پرواز کن.',

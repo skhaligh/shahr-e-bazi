@@ -13,7 +13,7 @@
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;overflow:hidden;background:#0b0e13;
   font-family:'Vazirmatn',Tahoma,sans-serif;color:var(--ink);user-select:none}
-canvas#cv{position:fixed;inset:0;display:block;touch-action:none}
+canvas#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
 #vig{position:fixed;inset:0;pointer-events:none;z-index:3;
   background:
    repeating-linear-gradient(0deg,rgba(255,255,255,.014) 0 1px,transparent 1px 3px),
@@ -416,7 +416,7 @@ function updatePlane(dt){
   overW=P.speed>108;lowW=!P.grounded&&altAGL<30&&P.vy<-2;
   maxAlt=Math.max(maxAlt,P.y);maxSpd=Math.max(maxSpd,P.speed*3.6);flightT+=dt;
   if(!hintThr&&flightT>1.2){hintThr=true;toast('W را نگه دار تا گاز بگیری',true)}
-  if(!hintRot&&!P.grounded===false&&P.speed>68&&P.grounded){hintRot=true;toast('حالا با ↑ دماغه را بالا بکش',true)}
+  if(!hintRot&&P.grounded&&P.speed>29){hintRot=true;toast('حالا با ↑ دماغه را بالا بکش',true)}
   if(!hintBank&&!P.grounded){bankT+=dt;if(bankT>5){hintBank=true;toast('با ← و → بانک بده و دور بزن')}}
 }
 function doCrash(){mode='crash';crashT=0;shake=1.4;boom();
@@ -459,8 +459,8 @@ function camTrig(){CH=Math.cos(cam.h);SH=Math.sin(cam.h);CP=Math.cos(cam.p);SP=M
 function toCam(p){const dx=p.x-cam.x,dy=p.y-cam.y,dz=p.z-cam.z;
   const x1=dx*CH-dz*SH,z1=dx*SH+dz*CH;
   return{x:x1,y:dy*CP-z1*SP,z:dy*SP+z1*CP}}
-function camToScr(c){const x3=c.x*CR+c.y*SR,y3=-c.x*SR+c.y*CR;
-  return{x:W2+x3*FOC/c.z,y:H2-y3*FOC/c.z}}
+function camToScr(c){const x3=c.x*CR-c.y*SR,y3=c.x*SR+c.y*CR; // same roll direction as the sky and the HUD horizon
+  return{x:W2+x3*FOC/c.z,y:H2-y3*FOC/c.z,z:c.z}}
 function project(p){const c=toCam(p);if(c.z<NEAR)return null;return camToScr(c)}
 function projectPoly(pts){const cs=pts.map(toCam),out=[];
   for(let k=0;k<cs.length;k++){const a=cs[k],b=cs[(k+1)%cs.length],ain=a.z>=NEAR;
@@ -641,8 +641,7 @@ function drawPlane(){
   if(viewCockpit&&mode==='fly')return;
   const P=plane,sh=Math.sin(P.h),ch=Math.cos(P.h),cp=Math.cos(P.p),sp=Math.sin(P.p);
   const F={x:sh*cp,y:sp,z:ch*cp},R0={x:ch,y:0,z:-sh};
-  const U0={x:-R0.z*F.y? 0:0,y:0,z:0};
-  U0.x=R0.y*F.z-R0.z*F.y;U0.y=R0.z*F.x-R0.x*F.z;U0.z=R0.x*F.y-R0.y*F.x;
+  const U0={x:F.y*R0.z-F.z*R0.y,y:F.z*R0.x-F.x*R0.z,z:F.x*R0.y-F.y*R0.x};
   const cr=Math.cos(P.r),sr=Math.sin(P.r);
   const Rv={x:R0.x*cr-U0.x*sr,y:R0.y*cr-U0.y*sr,z:R0.z*cr-U0.z*sr};
   const Uv={x:U0.x*cr+R0.x*sr,y:U0.y*cr+R0.y*sr,z:U0.z*cr+R0.z*sr};
@@ -656,11 +655,7 @@ function drawPlane(){
   const faces=[];
   for(const f of FACES){const pts=f.v.map(tf);
     const c0=toCam(pts[0]);if(c0.z<NEAR&&toCam(pts[1]).z<NEAR&&toCam(pts[2]).z<NEAR)continue;
-    if(!f.dc){const e1={x:pts[1].x-pts[0].x,y:pts[1].y-pts[0].y,z:pts[1].z-pts[0].z},
-      e2={x:pts[2].x-pts[0].x,y:pts[2].y-pts[0].y,z:pts[2].z-pts[0].z};
-      const n={x:e1.y*e2.z-e1.z*e2.y,y:e1.z*e2.x-e1.x*e2.z,z:e1.x*e2.y-e1.y*e2.x};
-      if(n.x*(pts[0].x-cam.x)+n.y*(pts[0].y-cam.y)+n.z*(pts[0].z-cam.z)>0)continue}
-    let dd=0;for(const p of pts)dd+=(p.x-cam.x)**2+(p.z-cam.z)**2;faces.push({pts,d:dd,f})}
+    let dd=0;for(const p of pts)dd+=toCam(p).z;faces.push({pts,d:dd/pts.length,f})}
   faces.sort((a,b)=>b.d-a.d);
   for(const fc of faces){const p0=fc.pts[0],p1=fc.pts[1],p2=fc.pts[2];
     const e1={x:p1.x-p0.x,y:p1.y-p0.y,z:p1.z-p0.z},e2={x:p2.x-p0.x,y:p2.y-p0.y,z:p2.z-p0.z};
@@ -711,8 +706,9 @@ function drawCockpitFrame(){
 }
 
 /* ================= HUD ================= */
+const amb='rgba(255,196,107,';
 function drawHUD(){
-  const P=plane,amb='rgba(255,196,107,';
+  const P=plane;
   ctx.textAlign='center';ctx.textBaseline='middle';
   // نوار جهت
   const tw=340,ty=30;
@@ -793,7 +789,7 @@ function tape(x,cy,val,step,range,lbl,axis){
     ctx.moveTo(x-10,y);ctx.lineTo(x+10,y);ctx.stroke();
     ctx.fillText(fa(Math.round(v)),x,y-9)}
   ctx.restore();
-  ctx.font='11px Vazirmatn';ctx.fillStyle=amb+'.7)';ctx.fillText(axis==='speed'?'سرعت':'ارتفاع',x,cy-vh-14);
+  ctx.font='11px Vazirmatn';ctx.fillStyle=amb+'.7)';ctx.fillText(axis,x,cy-vh-14);
 }
 function box(x,y,txt){ctx.fillStyle='rgba(12,16,22,.8)';ctx.strokeStyle=amb+'.9)';ctx.lineWidth=1.5;
   const w=58,h=24;ctx.fillRect(x-w/2,y-h/2,w,h);ctx.strokeRect(x-w/2,y-h/2,w,h);

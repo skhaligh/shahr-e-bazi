@@ -4,5 +4,5 @@ export const CONFIG = {
   // While this is empty, ideas are kept safely on the device and sent the first time the page
   // opens after the address is filled in.
   feedbackEndpoint: 'https://shahr-e-bazi-feedback.s-mahdirazavi.workers.dev',
-  version: '1.0.1',
+  version: '1.0.2',
 };
