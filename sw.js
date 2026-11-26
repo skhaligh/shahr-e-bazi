@@ -2,7 +2,7 @@
 // Site pages: fresh from the network when online, saved copy when offline.
 // Games and fonts: saved copy first (they are big and rarely change), refreshed in the background.
 // Bump VERSION whenever site files change, so installed copies pick up the new ones.
-const VERSION = 'v1';
+const VERSION = 'v2';
 const SHELL_CACHE = 'shahr-shell-' + VERSION;
 const GAMES_CACHE = 'shahr-games'; // same name as in js/app.js
 
