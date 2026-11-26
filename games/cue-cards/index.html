@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cappucino's Cue Cards</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="hero">
+        <h1>Cappucino's Cue Cards</h1>
+        <p class="subtitle">A visual cue-and-guess game for 1–3 players.</p>
+      </header>
+
+      <section id="setup" class="panel">
+        <h2>Start a Game</h2>
+        <div class="grid">
+          <label>
+            Version
+            <select id="versionSelect">
+              <option value="quick">Quick Guess (Fast)</option>
+              <option value="imagination">Imagination Builder (Creative)</option>
+            </select>
+          </label>
+
+          <label>
+            Players
+            <select id="playerCountSelect">
+              <option value="1">1 Player (Solo)</option>
+              <option value="2">2 Players</option>
+              <option value="3">3 Players</option>
+            </select>
+          </label>
+
+          <label id="styleWrap" class="hidden">
+            Style
+            <select id="styleSelect"></select>
+          </label>
+
+          <label>
+            Token Goal
+            <input id="tokenGoalInput" type="number" min="1" max="20" value="5" />
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <label class="toggle">
+            <input id="readAloudToggle" type="checkbox" checked />
+            Read cues aloud
+          </label>
+          <label class="toggle">
+            <input id="soundToggle" type="checkbox" checked />
+            Sound + celebration
+          </label>
+        </div>
+
+        <button id="startButton" class="primary">Start Game</button>
+
+        <details>
+          <summary>How to Play</summary>
+          <ul>
+            <li>Guess Mode: answer yes/no cue checks to reveal photo pieces.</li>
+            <li>Then guess the picture from photo choices.</li>
+            <li>Create Mode: invent something that matches all cues.</li>
+            <li>Quick Guess uses only Guess Mode with 2 main cues.</li>
+          </ul>
+        </details>
+      </section>
+
+      <section id="game" class="panel hidden">
+        <div class="status-row">
+          <p id="statusLine"></p>
+          <button id="resetButton" class="ghost">New Game</button>
+        </div>
+
+        <div class="scoreboard" id="scoreboard"></div>
+
+        <article class="round-card">
+          <h2 id="roundTitle">Round</h2>
+          <p id="roundMeta"></p>
+          <div id="cues" class="cues"></div>
+
+          <div id="guessArea" class="hidden">
+            <p id="secretHint"></p>
+            <button id="readCuesButton" class="ghost">Read Cues</button>
+
+            <div class="guess-layout">
+              <div class="puzzle-wrap">
+                <div id="puzzleBoard" class="puzzle-board">
+                  <img id="secretImage" alt="Hidden answer" />
+                  <div id="puzzleMask" class="puzzle-mask"></div>
+                </div>
+                <p id="revealProgress" class="secret"></p>
+              </div>
+
+              <div>
+                <h3>Response Challenge</h3>
+                <p id="challengePrompt" class="challenge">Loading challenge...</p>
+                <div class="challenge-actions">
+                  <button id="answerYes" class="primary">Yes</button>
+                  <button id="answerNo" class="ghost">No</button>
+                </div>
+                <p id="challengeProgress" class="feedback"></p>
+
+                <h3>Photo Guesses</h3>
+                <div id="guessOptions" class="guess-options"></div>
+                <p id="guessFeedback" class="feedback"></p>
+              </div>
+            </div>
+
+            <div id="guessActions"></div>
+          </div>
+
+          <div id="createArea" class="hidden">
+            <button id="readCreateCuesButton" class="ghost">Read Cues</button>
+            <label>
+              Write or draw your idea
+              <textarea id="ideaInput" rows="4" placeholder="Example: Blue cloud bear that gives soft hugs"></textarea>
+            </label>
+            <div id="createActions"></div>
+          </div>
+        </article>
+      </section>
+
+      <section class="panel samples">
+        <h2>Sample Cards</h2>
+        <div class="sample-grid">
+          <div>
+            <h3>Cue Cards</h3>
+            <ul id="sampleCues"></ul>
+          </div>
+          <div>
+            <h3>Picture Cards</h3>
+            <div id="samplePictures" class="sample-pictures"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

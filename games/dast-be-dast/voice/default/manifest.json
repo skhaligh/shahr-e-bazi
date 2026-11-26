@@ -1,0 +1,403 @@
+{
+  "label": "default",
+  "language": "fa",
+  "created": "2026-10-25T04:20:14.494Z",
+  "clips": [
+    {
+      "key": "letter.alef",
+      "file": "letter.alef.m4a",
+      "duration": 2.042,
+      "hash": "0d5b942db69b46833792fac6a14f9b72794d8b6a806b624e8c7df3541303b686"
+    },
+    {
+      "key": "letter.be",
+      "file": "letter.be.m4a",
+      "duration": 1.75,
+      "hash": "289893ed89f6eb609def4df1b8cf825db1ef7f2b595b1e1f6f97add01f3c8c98"
+    },
+    {
+      "key": "letter.che",
+      "file": "letter.che.m4a",
+      "duration": 1.59,
+      "hash": "d3af943ff15cc1c4780b2b5f8a9b19c53a41189a72747d678f8ed242166ca570"
+    },
+    {
+      "key": "letter.dal",
+      "file": "letter.dal.m4a",
+      "duration": 1.05,
+      "hash": "7e02a63f5b3ede3a4dc9623cbd251c2c1282fb32461d4314ddac8c8ac034b561"
+    },
+    {
+      "key": "letter.eyn",
+      "file": "letter.eyn.m4a",
+      "duration": 1.417,
+      "hash": "e8e4f2eabbb322fd54aa5dfb35f3fd510860b6e48bfb7b9a090bf70715801a8e"
+    },
+    {
+      "key": "letter.fe",
+      "file": "letter.fe.m4a",
+      "duration": 1.14,
+      "hash": "f9161d3942c3adb41db557e57286cff06f5dc313bf76b9f92c366655262bb577"
+    },
+    {
+      "key": "letter.gaf",
+      "file": "letter.gaf.m4a",
+      "duration": 1.61,
+      "hash": "4983ed934d37937d5f5502f2bea60b320d41fe44cabffbaf9992069bf221b706"
+    },
+    {
+      "key": "letter.ghayn",
+      "file": "letter.ghayn.m4a",
+      "duration": 1.37,
+      "hash": "631a451f6566191ec4f93ef0a999ad8e451b81196743bb13a1eace361c06f66f"
+    },
+    {
+      "key": "letter.he",
+      "file": "letter.he.m4a",
+      "duration": 1.14,
+      "hash": "8d87cad950a3f65e441d39f6bbb2806c9d9e6163345ff28d184d2e35005dc92c"
+    },
+    {
+      "key": "letter.hhe",
+      "file": "letter.hhe.m4a",
+      "duration": 1.605,
+      "hash": "84d0824e40a27edbb783d3a64896b8e4be99100efa8e391c2a02705620fdf7f5"
+    },
+    {
+      "key": "letter.jim",
+      "file": "letter.jim.m4a",
+      "duration": 1.01,
+      "hash": "56ef02317e6b1719939bb4eac5a28984b1dea9f34f736336fa7ea28504cd5560"
+    },
+    {
+      "key": "letter.kaf",
+      "file": "letter.kaf.m4a",
+      "duration": 1.275,
+      "hash": "caac613e93a6edbde00419a309a486cb4f2ceb864c4ecb9b8c483dd49ebd10ba"
+    },
+    {
+      "key": "letter.khe",
+      "file": "letter.khe.m4a",
+      "duration": 2.057,
+      "hash": "fbc06e1b260087880994f8a486a12b3938e8922a08c7b48b13d587d854b80a37"
+    },
+    {
+      "key": "letter.lam",
+      "file": "letter.lam.m4a",
+      "duration": 1.5,
+      "hash": "f15cf1cd40d6b62e2c772c301528a8e60363019f97ec03940196fae687d4028c"
+    },
+    {
+      "key": "letter.mim",
+      "file": "letter.mim.m4a",
+      "duration": 1.1,
+      "hash": "d524294cf4efc9fddad37ac0a0b692d9b65868681a8c145d79c768b290d3fc8c"
+    },
+    {
+      "key": "letter.nun",
+      "file": "letter.nun.m4a",
+      "duration": 2,
+      "hash": "92b85aa36791e37b7f88200e9580233b19977e8c2b337da2cc856cb4d7d1c5b7"
+    },
+    {
+      "key": "letter.pe",
+      "file": "letter.pe.m4a",
+      "duration": 1.305,
+      "hash": "ec6433e2dfda8b3086cfd6a8845ef4d893329d886c81b059747e5c16924147d4"
+    },
+    {
+      "key": "letter.qaf",
+      "file": "letter.qaf.m4a",
+      "duration": 1.75,
+      "hash": "73204fb6cbb8dcd57b4b38bec6fcef0d494ad197667755e6afcc8046914cb2bc"
+    },
+    {
+      "key": "letter.re",
+      "file": "letter.re.m4a",
+      "duration": 1.71,
+      "hash": "e5f097b5b13151643feb898fea80673b38419b6bb3a05fc9d4ad9c1368b5e51a"
+    },
+    {
+      "key": "letter.sad",
+      "file": "letter.sad.m4a",
+      "duration": 1.55,
+      "hash": "0a2cf1981170629129416cfe17347854022dbd2607564adae55361d4cba23499"
+    },
+    {
+      "key": "letter.se",
+      "file": "letter.se.m4a",
+      "duration": 2.1,
+      "hash": "1bbccb06c281fa34016720a7db7ef13f81302a03546c447790bc4166943f6156"
+    },
+    {
+      "key": "letter.shin",
+      "file": "letter.shin.m4a",
+      "duration": 1.27,
+      "hash": "923408922a70e3b9967f52d03e1a1d89a33c396d6872cf44c9a0b16612b5f6d2"
+    },
+    {
+      "key": "letter.sin",
+      "file": "letter.sin.m4a",
+      "duration": 2.088,
+      "hash": "0b081d853e4d503056661c31ec401bc1d089f75756cbc49f8a30a3f193ce9dd6"
+    },
+    {
+      "key": "letter.ta",
+      "file": "letter.ta.m4a",
+      "duration": 2,
+      "hash": "25ff7d543e268dfb62e8a5d5726347f731efe159fe70028f6c50f9d9d3bfb949"
+    },
+    {
+      "key": "letter.te",
+      "file": "letter.te.m4a",
+      "duration": 1.59,
+      "hash": "58e6c4d7f12a1be34b92228b96f37d3758b9f163cb5b717111b606cbff4ce60f"
+    },
+    {
+      "key": "letter.vav",
+      "file": "letter.vav.m4a",
+      "duration": 1.81,
+      "hash": "6bf537cd969a433ae415a3193acf9edcefd2449c5cc0a21f690438bd715bf634"
+    },
+    {
+      "key": "letter.ye",
+      "file": "letter.ye.m4a",
+      "duration": 1.14,
+      "hash": "2aba6f56d606884b128274e8d9438bc849a62ade2abdc2806583f2df1a5796be"
+    },
+    {
+      "key": "letter.za",
+      "file": "letter.za.m4a",
+      "duration": 1.56,
+      "hash": "fb42733ad9312f6f1f9cb6e1c29db5dc9eea99960aa17dcd8099b4b88902ebf9"
+    },
+    {
+      "key": "letter.zad",
+      "file": "letter.zad.m4a",
+      "duration": 1.82,
+      "hash": "1ad5f04e844cd8ac19435a10058bb22586073ad5185b9ea62e4ab766320aad1b"
+    },
+    {
+      "key": "letter.zal",
+      "file": "letter.zal.m4a",
+      "duration": 1.443,
+      "hash": "26901d228e8999300441959c22ea88507406960e3b0bd9124770035e40ce47dc"
+    },
+    {
+      "key": "letter.ze",
+      "file": "letter.ze.m4a",
+      "duration": 1.84,
+      "hash": "b4ef432f0fdd2b4cc1302ff09716f32625db62a0ce03dda24d83062c0f535c71"
+    },
+    {
+      "key": "letter.zhe",
+      "file": "letter.zhe.m4a",
+      "duration": 1.541,
+      "hash": "cc16d41c152c5684e34e7f81c26f3049518f5543dd25792ea58fb8d5dedeff39"
+    },
+    {
+      "key": "word.ab",
+      "file": "word.ab.m4a",
+      "duration": 0.42,
+      "hash": "f425e6aa51daf7322b693ad8ce52066fcfb44f7a2c394f52ecbf74bd759a84eb"
+    },
+    {
+      "key": "word.baba",
+      "file": "word.baba.m4a",
+      "duration": 0.69,
+      "hash": "af28fcc6530ca079903e211d928a84b6bcfc6374ed9b49ee2f34882051fa2c8c"
+    },
+    {
+      "key": "word.cheragh",
+      "file": "word.cheragh.m4a",
+      "duration": 0.59,
+      "hash": "3bc700f521595e1b4743212fbd0e9b883a4df28f593176e2013f674df032f6ad"
+    },
+    {
+      "key": "word.dar",
+      "file": "word.dar.m4a",
+      "duration": 0.51,
+      "hash": "c31911775f95368aad6a8c926eb07b989dd35d10dac6231c0f5428b6dc7c3fa7"
+    },
+    {
+      "key": "word.dast",
+      "file": "word.dast.m4a",
+      "duration": 0.61,
+      "hash": "ce6ad639597dc64b6293947e054d875dd672a1abbfab77c590dae2e8bc80b119"
+    },
+    {
+      "key": "word.docharkhe",
+      "file": "word.docharkhe.m4a",
+      "duration": 1.06,
+      "hash": "1da6c4ad9d12d95a45eef4afee1f7d6a7edf8b70299951f3c897a99bcf0b0827"
+    },
+    {
+      "key": "word.dust",
+      "file": "word.dust.m4a",
+      "duration": 0.69,
+      "hash": "39db2bde0c4b7b2135fa00101c08d7529c9bf4b2eeb7ad0841c95097a73a3f95"
+    },
+    {
+      "key": "word.ghashogh",
+      "file": "word.ghashogh.m4a",
+      "duration": 0.87,
+      "hash": "f7f2c0a058c78de43e4ea8e7c84e38c3b4893cc086364d7d2c5fa622537549d6"
+    },
+    {
+      "key": "word.kafsh",
+      "file": "word.kafsh.m4a",
+      "duration": 0.91,
+      "hash": "5e995d80dfb825635fa7916a403051db13e4b27a9b1d24d8bbc897f4d459afed"
+    },
+    {
+      "key": "word.kelid",
+      "file": "word.kelid.m4a",
+      "duration": 0.77,
+      "hash": "2c012e8f33aad9c76f4caf82329f39e35130c4d4782de934f0aeaef51eadc1c6"
+    },
+    {
+      "key": "word.ketab",
+      "file": "word.ketab.m4a",
+      "duration": 0.775,
+      "hash": "3be870167c46c5f2bde747d2d4859032b8dab4a9d19d86d3cf7258e24c2d201e"
+    },
+    {
+      "key": "word.kif",
+      "file": "word.kif.m4a",
+      "duration": 1.085,
+      "hash": "29e36ea99c68cb277b65e0161bbd7e87e7cb7339828c7895020027ea9056d8c9"
+    },
+    {
+      "key": "word.livan",
+      "file": "word.livan.m4a",
+      "duration": 0.594,
+      "hash": "6861a029742fbf19e0d62e40df9480ca50f6884fa5f168bd263679acc04f89ea"
+    },
+    {
+      "key": "word.maman",
+      "file": "word.maman.m4a",
+      "duration": 0.79,
+      "hash": "e4fe7fe173cc1bae2a5d4805cbb118bf00e13d25bea3feb0ffc79abeb34dc871"
+    },
+    {
+      "key": "word.mamnun",
+      "file": "word.mamnun.m4a",
+      "duration": 1.106,
+      "hash": "4982c94f787f3f8a6b7a3e16667edb5c983e2b09ff673604f5070b84a902a6ff"
+    },
+    {
+      "key": "word.mashin",
+      "file": "word.mashin.m4a",
+      "duration": 0.91,
+      "hash": "fcca832eca2f1897c5eda65a5b078e1757cee7f73ebd6c73254eb96dcfadd43d"
+    },
+    {
+      "key": "word.mehraban",
+      "file": "word.mehraban.m4a",
+      "duration": 0.75,
+      "hash": "408325725dd593d2e9de3ff287703939d997c73c1d7c4e3d66a326b08e932e69"
+    },
+    {
+      "key": "word.miz",
+      "file": "word.miz.m4a",
+      "duration": 0.788,
+      "hash": "acfbd3e741d0d5c8a1d24dc069a5f295c78e6445572531f3882d68c674ba9ed7"
+    },
+    {
+      "key": "word.moz",
+      "file": "word.moz.m4a",
+      "duration": 0.708,
+      "hash": "146a9e08524d25a8a2e5ca53d10a43337373f90c3b964c10d10d00afa413366b"
+    },
+    {
+      "key": "word.nan",
+      "file": "word.nan.m4a",
+      "duration": 0.756,
+      "hash": "3693567c2dcee375d13a8f79898fe9aaa3dd31fcbe91328a7153c37d5d140cb4"
+    },
+    {
+      "key": "word.pa",
+      "file": "word.pa.m4a",
+      "duration": 0.36,
+      "hash": "05a79a91be659802c44609d3fda684f0a6133a50dfc20f5d40c00af3071d73f8"
+    },
+    {
+      "key": "word.pol",
+      "file": "word.pol.m4a",
+      "duration": 0.66,
+      "hash": "74a3dcd7cd7852d93a12d8bc5d0ce0face860ba1dd0d909ff5d313fb5b433cfc"
+    },
+    {
+      "key": "word.rast",
+      "file": "word.rast.m4a",
+      "duration": 0.771,
+      "hash": "be51b71a69562ff7d121c46b8125cb1d34b20db4b16021a23a42f4be25c32997"
+    },
+    {
+      "key": "word.sabr",
+      "file": "word.sabr.m4a",
+      "duration": 0.75,
+      "hash": "62d07a96453ddc1d7139f87d191e920594d725a996e9ed101769b5cb433873fa"
+    },
+    {
+      "key": "word.sar",
+      "file": "word.sar.m4a",
+      "duration": 0.57,
+      "hash": "e2a31c847cb17fd5c90a25da4daf7d0626fd0a3f1b4dd7064151eebc97801a40"
+    },
+    {
+      "key": "word.sib",
+      "file": "word.sib.m4a",
+      "duration": 0.64,
+      "hash": "693acd899b1c6948066a5f56dd8ad26a7c9e46bb065b91b98d579349998060df"
+    },
+    {
+      "key": "word.takht",
+      "file": "word.takht.m4a",
+      "duration": 0.79,
+      "hash": "1a539ac970e0f46aa091702143f2202c331c94e34be7e9fd6ddc36ef9de4409b"
+    },
+    {
+      "key": "word.toop",
+      "file": "word.toop.m4a",
+      "duration": 0.54,
+      "hash": "6b8873c65a4d50bc06a781c068d9ba69dd1e46fb62c57300f5caff1e09e3dc92"
+    },
+    {
+      "key": "word.anar",
+      "file": "word.anar.m4a",
+      "duration": 0.657,
+      "hash": "19ec3bbd137c696d2a8ca91457936b3919dac621eaaff8c98495bb8a879345ca"
+    },
+    {
+      "key": "word.havij",
+      "file": "word.havij.m4a",
+      "duration": 0.808,
+      "hash": "314ee38bc992f45b8d5be42a2cbd26609bd48edca4e8eb1dd3d69bf9e4ab1d65"
+    },
+    {
+      "key": "word.panir",
+      "file": "word.panir.m4a",
+      "duration": 0.85,
+      "hash": "43289ec2550cc0736722d4fb4d0939c3816d397430b0ae96b6984a30e794db6a"
+    },
+    {
+      "key": "word.khiar",
+      "file": "word.khiar.m4a",
+      "duration": 0.53,
+      "hash": "96fded0f965c73708f9eaaaa4616047a9dd44fdce661461f9afe6595b123c4cf"
+    },
+    {
+      "key": "word.bastani",
+      "file": "word.bastani.m4a",
+      "duration": 0.838,
+      "hash": "ce3769284c5de364a8f996a070de3750795463dbcb304434e4a4fefeb4bb4fa2"
+    },
+    {
+      "key": "word.gol",
+      "file": "word.gol.m4a",
+      "duration": 0.76,
+      "hash": "2751688808c9b5383cfd599cbef5a15a0808e0feedbf4320971b51da3bd5023f"
+    }
+  ]
+}

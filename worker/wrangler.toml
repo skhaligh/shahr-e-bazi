@@ -1,0 +1,12 @@
+# Cloudflare Worker that receives ideas from شهرِ بازی and files them in the private inbox repo.
+# Deploy:  cd worker && npx wrangler deploy
+# Secret:  npx wrangler secret put GITHUB_TOKEN   (paste the fine-grained token when asked)
+name = "shahr-e-bazi-feedback"
+main = "src/index.js"
+compatibility_date = "2026-11-01"
+workers_dev = true
+
+[vars]
+GITHUB_REPO = "skhaligh/shahr-e-bazi-feedback"
+ALLOWED_ORIGINS = "https://skhaligh.github.io"
+DAILY_LIMIT = "100"

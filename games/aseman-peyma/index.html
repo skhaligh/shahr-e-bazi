@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>آسمان‌پیما — شبیه‌ساز پرواز</title>
+<link href="https://fonts.googleapis.com/css2?family=Lalezar&family=Vazirmatn:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --amber:#ffb454; --amber2:#ffcf8a; --ink:#e8eef6; --dim:#9fb0c3;
+  --panel:#141a22; --line:#3d4a5c; --red:#ff5d49; --green:#7dffa8;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#0b0e13;
+  font-family:'Vazirmatn',Tahoma,sans-serif;color:var(--ink);user-select:none}
+canvas#cv{position:fixed;inset:0;display:block;touch-action:none}
+#vig{position:fixed;inset:0;pointer-events:none;z-index:3;
+  background:
+   repeating-linear-gradient(0deg,rgba(255,255,255,.014) 0 1px,transparent 1px 3px),
+   radial-gradient(120% 95% at 50% 42%,transparent 58%,rgba(4,7,12,.55) 100%)}
+/* ---------- نوار بالا ---------- */
+#topbar{position:fixed;top:14px;inset-inline-start:14px;z-index:20;display:flex;gap:8px}
+.chip{font:600 12px 'Vazirmatn';color:var(--amber2);background:rgba(14,19,27,.72);
+  border:1px solid rgba(255,180,84,.35);border-radius:8px;padding:7px 12px;cursor:pointer;
+  transition:.18s;letter-spacing:.3px}
+.chip:hover{background:rgba(255,180,84,.14);box-shadow:0 0 14px rgba(255,180,84,.25);transform:translateY(-1px)}
+.chip:active{transform:translateY(1px)}
+.chip b{font-weight:800;color:#fff}
+/* ---------- پنل‌ها ---------- */
+.ov{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;
+  background:rgba(7,10,15,.48);transition:opacity .35s;padding:16px}
+.ov.hide{opacity:0;pointer-events:none}
+.panel{width:min(760px,94vw);max-height:92vh;overflow:auto;border-radius:14px;
+  background:linear-gradient(165deg,#1b232ef5,#10151cf7);
+  border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.06);
+  padding:26px 30px 28px;transform:scale(.96);transition:transform .35s}
+.ov:not(.hide) .panel{transform:scale(1)}
+.p-head{border-bottom:1px dashed var(--line);padding-bottom:14px;margin-bottom:16px}
+.badge{display:inline-block;font:600 11px 'Vazirmatn';color:var(--amber);border:1px solid rgba(255,180,84,.5);
+  border-radius:20px;padding:3px 12px;margin-bottom:8px;letter-spacing:1px}
+h1{font-family:'Lalezar';font-weight:400;font-size:46px;margin:0;line-height:1.1;color:#ffd9a0;
+  text-shadow:0 0 22px rgba(255,180,84,.35)}
+.sub{margin:4px 0 0;color:var(--dim);font-size:14px}
+.p-cols{display:flex;gap:26px;flex-wrap:wrap}
+.p-cols>div{flex:1;min-width:240px}
+.p-cols h3{font-family:'Lalezar';font-weight:400;font-size:20px;color:var(--amber2);margin:6px 0 10px}
+.checklist ul{list-style:none;margin:0;padding:0}
+.checklist li{padding:6px 2px;border-bottom:1px solid rgba(61,74,92,.4);font-size:14px;color:#cfd9e4;
+  display:flex;justify-content:space-between;opacity:0;transform:translateX(14px);
+  animation:item .5s forwards}
+.checklist li i{font-style:normal;color:var(--green);font-weight:800}
+.checklist li:nth-child(1){animation-delay:.15s}.checklist li:nth-child(2){animation-delay:.3s}
+.checklist li:nth-child(3){animation-delay:.45s}.checklist li:nth-child(4){animation-delay:.6s}
+.checklist li:nth-child(5){animation-delay:.75s}
+@keyframes item{to{opacity:1;transform:none}}
+table.keys{width:100%;border-collapse:collapse;font-size:13.5px}
+table.keys td{padding:5px 4px;border-bottom:1px solid rgba(61,74,92,.35);color:#cfd9e4}
+table.keys td:first-child{white-space:nowrap;width:42%}
+kbd{display:inline-block;background:#232b36;border:1px solid #4a5870;border-bottom-width:3px;border-radius:6px;
+  padding:1px 8px;font:600 12px 'Vazirmatn';color:#fff;margin-inline-start:3px}
+.mission{margin:18px 0 6px;background:rgba(255,180,84,.08);border:1px solid rgba(255,180,84,.3);
+  border-inline-start:4px solid var(--amber);border-radius:10px;padding:12px 16px;font-size:14.5px;line-height:1.9}
+.btn{display:block;margin:18px auto 4px;font-family:'Lalezar';font-size:24px;color:#241503;cursor:pointer;
+  background:linear-gradient(#ffc873,#ff9d2e);border:none;border-radius:11px;padding:10px 58px;
+  box-shadow:0 6px 22px rgba(255,157,46,.35);transition:.18s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(255,157,46,.55)}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:transparent;color:var(--amber2);border:1px solid rgba(255,180,84,.5);box-shadow:none;font-size:19px;padding:8px 34px}
+.hintline{text-align:center;color:var(--dim);font-size:12.5px;margin-top:10px}
+.stats{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:16px 0 4px}
+.stat{background:#101720;border:1px solid var(--line);border-radius:10px;padding:10px 18px;text-align:center;min-width:110px}
+.stat b{display:block;font-family:'Lalezar';font-size:26px;color:var(--amber2)}
+.stat span{font-size:12px;color:var(--dim)}
+.stamp{display:inline-block;font-family:'Lalezar';font-size:52px;color:var(--green);
+  border:4px solid var(--green);border-radius:12px;padding:2px 26px;transform:rotate(-6deg);
+  animation:stampIn .5s cubic-bezier(.2,2.2,.4,1) both;text-shadow:0 0 18px rgba(125,255,168,.4)}
+@keyframes stampIn{from{transform:rotate(-6deg) scale(2.4);opacity:0}}
+.center{text-align:center}
+.big-red{font-family:'Lalezar';font-size:52px;color:var(--red);text-shadow:0 0 24px rgba(255,93,73,.5);margin:0}
+/* ---------- توست‌ها ---------- */
+#toasts{position:fixed;top:16%;inset-inline:0;z-index:25;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
+.toast{background:rgba(15,20,28,.9);border:1px solid rgba(255,180,84,.45);border-inline-start:4px solid var(--amber);
+  border-radius:9px;padding:8px 20px;font-size:14.5px;color:#ffe9c8;box-shadow:0 8px 24px rgba(0,0,0,.4);
+  animation:tIn .3s;transition:opacity .4s,transform .4s}
+.toast.out{opacity:0;transform:translateY(-10px)}
+@keyframes tIn{from{opacity:0;transform:translateY(12px)}}
+/* ---------- لمس ---------- */
+#touch{position:fixed;bottom:18px;inset-inline-end:16px;z-index:22;display:none;gap:12px}
+body.touchmode #touch{display:flex}
+.tbtn{width:64px;height:64px;border-radius:50%;border:1px solid rgba(255,180,84,.5);
+  background:rgba(14,19,27,.7);color:var(--amber2);font:800 13px 'Vazirmatn';touch-action:none}
+.tbtn:active{background:rgba(255,180,84,.25)}
+#stick{position:fixed;z-index:21;width:90px;height:90px;border-radius:50%;border:2px solid rgba(255,180,84,.4);
+  pointer-events:none;display:none;transform:translate(-50%,-50%)}
+#stick::after{content:'';position:absolute;inset:28px;border-radius:50%;background:rgba(255,180,84,.35)}
+@media(max-width:640px){h1{font-size:36px}.p-cols{gap:12px}}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="vig"></div>
+
+<div id="topbar">
+  <button class="chip" id="bSnd">صدا <b>M</b></button>
+  <button class="chip" id="bCam">دوربین <b>V</b></button>
+  <button class="chip" id="bPse">توقف <b>P</b></button>
+  <button class="chip" id="bHlp">راهنما <b>H</b></button>
+</div>
+
+<div id="toasts"></div>
+<div id="stick"></div>
+<div id="touch">
+  <button class="tbtn" id="tUp">گاز +</button>
+  <button class="tbtn" id="tDn">گاز −</button>
+  <button class="tbtn" id="tBr">ترمز</button>
+</div>
+
+<!-- بریفینگ / شروع -->
+<div class="ov" id="ovBrief">
+  <div class="panel">
+    <div class="p-head">
+      <span class="badge">مأموریت آموزشی • باند ۱۸</span>
+      <h1>آسمان‌پیما</h1>
+      <p class="sub">شبیه‌ساز پرواز تک‌صفحه‌ای — مستقیم در مرورگر، بدون نصب</p>
+    </div>
+    <div class="p-cols">
+      <div class="checklist">
+        <h3>چک‌لیست پیش از پرواز</h3>
+        <ul>
+          <li>سوخت کامل <i>✓</i></li>
+          <li>چراغ‌های ناوبری <i>✓</i></li>
+          <li>سطوح کنترل <i>✓</i></li>
+          <li>بی‌سیم برج مراقبت <i>✓</i></li>
+          <li>مسیر حلقه‌ها بارگذاری شد <i>✓</i></li>
+        </ul>
+      </div>
+      <div>
+        <h3>فرمان‌ها</h3>
+        <table class="keys">
+          <tr><td>دماغه بالا / پایین</td><td><kbd>↑</kbd><kbd>↓</kbd></td></tr>
+          <tr><td>بانک چپ / راست</td><td><kbd>←</kbd><kbd>→</kbd></td></tr>
+          <tr><td>گاز زیاد / کم</td><td><kbd>W</kbd><kbd>S</kbd></td></tr>
+          <tr><td>سکان جهت</td><td><kbd>A</kbd><kbd>D</kbd></td></tr>
+          <tr><td>ترمز</td><td><kbd>Space</kbd></td></tr>
+          <tr><td>دوربین / صدا / توقف</td><td><kbd>V</kbd><kbd>M</kbd><kbd>P</kbd></td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="mission">🎯 <b>مأموریت:</b> با گازِ کامل از باند برخیز، از میان <b>۱۲ حلقهٔ نارنجی</b> بگذر (ستون نور، حلقهٔ بعدی را نشان می‌دهد) و در پایان، آرام روی باند فرود بیا.</div>
+    <button class="btn" id="btnStart">پرواز را آغاز کن ✈</button>
+    <p class="hintline">پیشنهاد: صدا را روشن نگه دار — صدای موتور و باد با WebAudio ساخته می‌شود.</p>
+  </div>
+</div>
+
+<!-- توقف -->
+<div class="ov hide" id="ovPause">
+  <div class="panel center" style="width:min(380px,92vw)">
+    <h1 style="font-size:38px">توقف موقت</h1>
+    <p class="sub">پرواز در انتظار فرمان توست…</p>
+    <button class="btn" id="btnResume">ادامهٔ پرواز</button>
+    <button class="btn ghost" id="btnRestart1">شروع مجدد</button>
+  </div>
+</div>
+
+<!-- راهنما -->
+<div class="ov hide" id="ovHelp">
+  <div class="panel" style="width:min(430px,92vw)">
+    <h3 style="font-family:'Lalezar';font-size:26px;color:var(--amber2);margin-top:0">راهنمای فرمان‌ها</h3>
+    <table class="keys">
+      <tr><td>پیچ (دماغه)</td><td><kbd>↑</kbd><kbd>↓</kbd></td></tr>
+      <tr><td>رول (بانک)</td><td><kbd>←</kbd><kbd>→</kbd></td></tr>
+      <tr><td>گاز / کم‌کردن گاز</td><td><kbd>W</kbd><kbd>S</kbd></td></tr>
+      <tr><td>سکان</td><td><kbd>A</kbd><kbd>D</kbd></td></tr>
+      <tr><td>ترمز</td><td><kbd>Space</kbd></td></tr>
+      <tr><td>نمای کابین / تعقیب</td><td><kbd>V</kbd></td></tr>
+      <tr><td>شروع مجدد</td><td><kbd>R</kbd></td></tr>
+    </table>
+    <p class="hintline">سرعت برخاست ≈ ۱۱۰ کیلومتر/ساعت — زیر ۷۵ واماند می‌دهی!</p>
+    <button class="btn ghost" id="btnCloseHelp">بستن</button>
+  </div>
+</div>
+
+<!-- سقوط -->
+<div class="ov hide" id="ovCrash">
+  <div class="panel center" style="width:min(460px,92vw)">
+    <p class="big-red">سقوط!</p>
+    <p class="sub">هواپیما با زمین برخورد کرد. گزارش پرواز:</p>
+    <div class="stats">
+      <div class="stat"><b id="cTime">۰:۰۰</b><span>مدت پرواز</span></div>
+      <div class="stat"><b id="cRing">۰/۱۲</b><span>حلقه‌ها</span></div>
+      <div class="stat"><b id="cAlt">۰</b><span>بیشینه ارتفاع (م)</span></div>
+      <div class="stat"><b id="cSpd">۰</b><span>بیشینه سرعت (کم/س)</span></div>
+    </div>
+    <button class="btn" id="btnRestart2">پرواز دوباره</button>
+  </div>
+</div>
+
+<!-- پیروزی -->
+<div class="ov hide" id="ovWin">
+  <div class="panel center" style="width:min(480px,92vw)">
+    <h1 style="font-size:40px">مأموریت کامل شد!</h1>
+    <div style="margin:14px 0"><span class="stamp" id="wGrade">فرود نرم</span></div>
+    <div class="stats">
+      <div class="stat"><b id="wTime">۰:۰۰</b><span>مدت مأموریت</span></div>
+      <div class="stat"><b id="wRing">۱۲/۱۲</b><span>حلقه‌ها</span></div>
+      <div class="stat"><b id="wAlt">۰</b><span>بیشینه ارتفاع (م)</span></div>
+    </div>
+    <button class="btn" id="btnRestart3">مأموریت دوباره</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ================= ابزار ================= */
+const TAU=Math.PI*2, clamp=(v,a,b)=>v<a?a:v>b?b:v, lerp=(a,b,t)=>a+(b-a)*t;
+const smooth=(a,b,t)=>{t=clamp((t-a)/(b-a),0,1);return t*t*(3-2*t)};
+const angDiff=(a,b)=>{let d=(a-b)%TAU;if(d>Math.PI)d-=TAU;if(d<-Math.PI)d+=TAU;return d};
+const lerpAng=(a,b,t)=>a+angDiff(b,a)*t;
+const FA='۰۱۲۳۴۵۶۷۸۹', fa=n=>String(n).replace(/\d/g,d=>FA[d]);
+const faTime=s=>{s=Math.floor(s);return fa(Math.floor(s/60))+':'+fa(String(s%60).padStart(2,'0'))};
+function hash2(x,y){const n=Math.sin(x*127.1+y*311.7)*43758.5453;return n-Math.floor(n)}
+function vnoise(x,y){const ix=Math.floor(x),iy=Math.floor(y),fx=x-ix,fy=y-iy,
+ sx=fx*fx*(3-2*fx),sy=fy*fy*(3-2*fy),a=hash2(ix,iy),b=hash2(ix+1,iy),c=hash2(ix,iy+1),d=hash2(ix+1,iy+1);
+ return a+(b-a)*sx+(c-a)*sy+(a-b-c+d)*sx*sy}
+/* ================= زمین ================= */
+const WL=-7, RG=1600, CELL=64;
+const hCache=new Map();
+function terrainH(x,z){
+  const ix=Math.round(x),iz=Math.round(z),k=ix*131072+iz;
+  let h=hCache.get(k);
+  if(h===undefined){
+    const wx=Math.round(x/CELL)*CELL, wz=Math.round(z/CELL)*CELL, kk=wx*131072+wz;
+    h=hCache.get(kk);
+    if(h===undefined){
+      h=(vnoise(wx*0.0016,wz*0.0016)-0.5)*180+(vnoise(wx*0.008,wz*0.008)-0.5)*22
+        -vnoise(wx*0.0007+13.7,wz*0.0007+7.3)*46;
+      const dx=Math.max(Math.abs(wx)-70,0),dz=Math.max(Math.abs(wz)-780,0);
+      h*=smooth(0,620,Math.hypot(dx,dz));
+      hCache.set(kk,h); if(hCache.size>90000)hCache.clear();
+    }
+    hCache.set(k,h);
+  }
+  return h;
+}
+const TSTOPS=[[-16,[44,70,64]],[-8,[112,114,74]],[-2,[98,122,60]],[25,[86,114,52]],
+              [55,[112,110,78]],[90,[136,128,112]],[125,[226,224,215]]];
+function pal(h){
+  for(let i=0;i<TSTOPS.length-1;i++){const a=TSTOPS[i],b=TSTOPS[i+1];
+    if(h<=b[0]){const t=clamp((h-a[0])/(b[0]-a[0]),0,1);
+      return [lerp(a[1][0],b[1][0],t),lerp(a[1][1],b[1][1],t),lerp(a[1][2],b[1][2],t)]}}
+  return TSTOPS[TSTOPS.length-1][1];
+}
+const FOG=[233,181,126], SUN={x:-0.45,y:0.65,z:-0.61};
+/* ================= وضعیت ================= */
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+let W=0,H=0,W2=0,H2=0,focal=800,DPR=1;
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;W2=W/2;H2=H/2;
+  cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);focal=H*0.95}
+addEventListener('resize',resize);resize();
+
+const cam={x:0,y:80,z:-900,h:0,p:0,r:0};
+const plane={x:0,y:1.7,z:-560,h:0,p:0,r:0,speed:0,thr:0,grounded:true,pi:0,ri:0,vx:0,vy:0,vz:0};
+let mode='attract',paused=false,viewCockpit=false,tG=0,flightT=0,score=0,missionDone=false;
+let maxAlt=0,maxSpd=0,crashT=0,winT=0,shake=0,stallW=false,overW=false,lowW=false,altAGL=999;
+let tookOff=false,hintThr=false,hintRot=false,hintBank=false,bankT=0;
+const particles=[];
+
+/* حلقه‌ها */
+const RINGS=[],RN=12,RC={x:0,z:2600},RR=1400;
+for(let i=0;i<RN;i++){const a=-Math.PI/2+i*TAU/RN,x=RC.x+Math.cos(a)*RR,z=RC.z+Math.sin(a)*RR;
+  const y=Math.max(125+80*Math.sin(i*1.31+0.7),terrainH(x,z)+75);
+  RINGS.push({x,y,z,nx:-Math.sin(a),nz:Math.cos(a),R:22,passed:false,side:0})}
+const nextRing=()=>RINGS.find(r=>!r.passed)||null;
+
+/* ابرها و پرندگان */
+function makeCloudSprite(seed){const c=document.createElement('canvas');c.width=c.height=256;
+  const g=c.getContext('2d');for(let i=0;i<6;i++){const x=60+hash2(seed,i)*136,y=100+hash2(i,seed)*70,r=45+hash2(seed+i,3)*45;
+  const gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,'rgba(255,246,235,.85)');gr.addColorStop(1,'rgba(255,246,235,0)');
+  g.fillStyle=gr;g.beginPath();g.arc(x,y,r,0,TAU);g.fill()}return c}
+const cloudSprites=[makeCloudSprite(3),makeCloudSprite(9)];
+const clouds=[];for(let i=0;i<26;i++)clouds.push({x:(hash2(i,1)-.5)*20000,y:430+hash2(i,2)*520,
+  z:(hash2(i,3)-.5)*20000,s:260+hash2(i,4)*420,sp:cloudSprites[i%2]});
+const birds=[];for(let i=0;i<7;i++)birds.push({r:140+i*30,w:(0.25+hash2(i,5)*0.2)*(i%2?1:-1),
+  a:hash2(i,6)*TAU,h:70+hash2(i,7)*50,ph:i*1.3});
+
+/* ================= صدا ================= */
+let AC=null,master,engGain,engOsc,engSub,windGain,muted=false;
+function initAudio(){if(AC)return;try{
+  AC=new (window.AudioContext||window.webkitAudioContext)();
+  master=AC.createGain();master.gain.value=.8;master.connect(AC.destination);
+  const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=420;lp.connect(master);
+  engOsc=AC.createOscillator();engOsc.type='sawtooth';engOsc.frequency.value=70;
+  engSub=AC.createOscillator();engSub.type='sine';engSub.frequency.value=35;
+  engGain=AC.createGain();engGain.gain.value=0;
+  engOsc.connect(engGain);engSub.connect(engGain);engGain.connect(lp);engOsc.start();engSub.start();
+  const len=AC.sampleRate*2,buf=AC.createBuffer(1,len,AC.sampleRate),d=buf.getChannelData(0);
+  for(let i=0;i<len;i++)d[i]=Math.random()*2-1;
+  const src=AC.createBufferSource();src.buffer=buf;src.loop=true;
+  const bp=AC.createBiquadFilter();bp.type='bandpass';bp.frequency.value=520;bp.Q.value=.6;
+  windGain=AC.createGain();windGain.gain.value=0;src.connect(bp);bp.connect(windGain);windGain.connect(master);src.start();
+}catch(e){}}
+function setAudio(){if(!AC)return;const fly=mode==='fly';
+  const f=58+plane.thr*95+(fly?plane.speed*0.25:0);
+  engOsc.frequency.setTargetAtTime(f,AC.currentTime,.08);
+  engSub.frequency.setTargetAtTime(f*.5,AC.currentTime,.08);
+  engGain.gain.setTargetAtTime(fly?0.05+plane.thr*0.2:(mode==='attract'?0.028:0.02),AC.currentTime,.1);
+  windGain.gain.setTargetAtTime(fly?clamp((plane.speed-12)/85,0,1)*0.22:0,AC.currentTime,.15)}
+function ding(){if(!AC)return;const t=AC.currentTime;
+  [[940,0],[1250,.09]].forEach(([f,dl])=>{const o=AC.createOscillator(),g=AC.createGain();
+   o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(.22,t+dl);
+   g.gain.exponentialRampToValueAtTime(.001,t+dl+.5);o.connect(g);g.connect(master);o.start(t+dl);o.stop(t+dl+.55)})}
+function boom(){if(!AC)return;const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();
+  o.type='sine';o.frequency.setValueAtTime(70,t);o.frequency.exponentialRampToValueAtTime(28,t+.9);
+  g.gain.setValueAtTime(.9,t);g.gain.exponentialRampToValueAtTime(.001,t+1.1);
+  o.connect(g);g.connect(master);o.start(t);o.stop(t+1.2);
+  const len=AC.sampleRate,buf=AC.createBuffer(1,len,AC.sampleRate),d=buf.getChannelData(0);
+  for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*(1-i/len);
+  const s=AC.createBufferSource(),lp=AC.createBiquadFilter(),g2=AC.createGain();
+  s.buffer=buf;lp.type='lowpass';lp.frequency.value=300;g2.gain.value=.7;
+  s.connect(lp);lp.connect(g2);g2.connect(master);s.start(t)}
+function toggleMute(){muted=!muted;if(master)master.gain.value=muted?0:.8;
+  document.getElementById('bSnd').innerHTML='صدا <b>M</b>'+(muted?' 🔇':'')}
+
+/* ================= ورودی ================= */
+const keys={};
+let touchActive=false,touchId=-1,tX=0,tY=0,tPitch=0,tRoll=0,tThrottle=0,tBrake=false;
+addEventListener('keydown',e=>{
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();
+  if(e.repeat)return;keys[e.code]=true;
+  if(e.code==='KeyM')toggleMute();
+  if(e.code==='KeyV')toggleView();
+  if(e.code==='KeyP'||e.code==='Escape')togglePause();
+  if(e.code==='KeyH')toggleHelp();
+  if(e.code==='KeyR'&&mode!=='attract')startFlight();
+  if(AC&&AC.state==='suspended')AC.resume();
+});
+addEventListener('keyup',e=>keys[e.code]=false);
+addEventListener('blur',()=>{for(const k in keys)keys[k]=false;if(mode==='fly')setPause(true)});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&mode==='fly')setPause(true)});
+cv.addEventListener('pointerdown',e=>{if(mode!=='fly'||e.pointerType==='mouse')return;
+  touchActive=true;touchId=e.pointerId;tX=e.clientX;tY=e.clientY;
+  const st=document.getElementById('stick');st.style.display='block';
+  st.style.left=e.clientX+'px';st.style.top=e.clientY+'px'});
+addEventListener('pointermove',e=>{if(!touchActive||e.pointerId!==touchId)return;
+  tRoll=clamp((e.clientX-tX)/70,-1,1);tPitch=clamp(-(e.clientY-tY)/70,-1,1)});
+addEventListener('pointerup',e=>{if(e.pointerId===touchId){touchActive=false;tPitch=tRoll=0;
+  document.getElementById('stick').style.display='none'}});
+if(matchMedia('(pointer:coarse)').matches||'ontouchstart'in window)document.body.classList.add('touchmode');
+const hold=(id,set)=>{const el=document.getElementById(id);
+  el.addEventListener('pointerdown',e=>{e.preventDefault();set(true)});
+  ['pointerup','pointerleave','pointercancel'].forEach(ev=>el.addEventListener(ev,()=>set(false)))};
+hold('tUp',v=>tThrottle=v?1:0);hold('tDn',v=>tThrottle=v?-1:tThrottle);hold('tBr',v=>tBrake=v);
+
+/* ================= توست ================= */
+function toast(msg,stay){const t=document.createElement('div');t.className='toast';t.textContent=msg;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),450)},stay?6000:3200)}
+
+/* ================= فیزیک ================= */
+function checkRings(prev){for(const r of RINGS){if(r.passed)continue;
+  const cur=(plane.x-r.x)*r.nx+(plane.z-r.z)*r.nz;
+  if(r.side&&cur*r.side<0){const a=r.side/(r.side-cur);
+    const ix=prev.x+(plane.x-prev.x)*a,iy=prev.y+(plane.y-prev.y)*a,iz=prev.z+(plane.z-prev.z)*a;
+    if((ix-r.x)**2+(iy-r.y)**2+(iz-r.z)**2<(r.R-2)**2){
+      r.passed=true;score++;ding();toast('حلقهٔ '+fa(score)+' از '+fa(RN)+' ✓');
+      if(score===RN){missionDone=true;setTimeout(ding,300);
+        toast('🏁 مأموریت کامل شد! حالا آرام روی باند فرود بیا',true)}}}
+  r.side=cur}}
+
+function updatePlane(dt){
+  const P=plane;
+  const thU=(keys.KeyW||keys.ShiftLeft||tThrottle>0)?1:0;
+  const thD=(keys.KeyS||tThrottle<0)?1:0;
+  P.thr=clamp(P.thr+(thU-thD)*dt*0.55,0,1);
+  const rudIn=((keys.KeyD?1:0)-(keys.KeyA?1:0));
+  let pitchIn=((keys.ArrowUp?1:0)-(keys.ArrowDown?1:0));
+  let rollIn=((keys.ArrowRight?1:0)-(keys.ArrowLeft?1:0));
+  if(touchActive){pitchIn=tPitch;rollIn=tRoll}
+  P.pi+=(pitchIn-P.pi)*Math.min(1,10*dt);P.ri+=(rollIn-P.ri)*Math.min(1,10*dt);
+  const brake=keys.Space||tBrake;
+  stallW=false;
+
+  if(P.grounded){
+    P.speed+= (P.thr*15-1.1-0.02*P.speed)*dt;
+    if(brake)P.speed=Math.max(0,P.speed-30*dt);
+    P.speed=Math.max(0,P.speed);
+    P.h+=rudIn*0.8*dt*clamp(P.speed/22,0,1.4);
+    P.p*=Math.exp(-6*dt);P.r*=Math.exp(-6*dt);
+    if(pitchIn>0.4&&P.speed>29){P.grounded=false;P.p=0.09;
+      if(!tookOff){tookOff=true;toast('برخاست موفق! به سمت حلقه‌ها برو 🛫')}}
+    P.y=terrainH(P.x,P.z)+1.7;altAGL=0;
+  }else{
+    const auth=clamp(P.speed/45,0.3,1);
+    P.p=clamp(P.p+P.pi*1.5*auth*dt,-1.25,1.3);if(!pitchIn)P.p*=Math.exp(-0.35*dt);
+    P.r=clamp(P.r+P.ri*2.4*auth*dt+rudIn*0.12*auth*dt,-1.15,1.15);
+    if(!rollIn)P.r*=Math.exp(-1.1*dt);
+    P.h+=Math.tan(P.r)*9.81/Math.max(P.speed,16)*0.92*dt+rudIn*0.25*auth*dt;
+    P.speed=clamp(P.speed+(P.thr*23-0.0029*P.speed*P.speed-9.81*Math.sin(P.p)*0.6-(brake?4:0))*dt,0,125);
+    let sink=0;const Vs=21;
+    if(P.speed<Vs){stallW=true;P.p-=(Vs-P.speed)*0.05*dt;sink=(Vs-P.speed)*0.55}
+    const cp=Math.cos(P.p);
+    P.vx=Math.sin(P.h)*cp*P.speed;P.vy=Math.sin(P.p)*P.speed-sink;P.vz=Math.cos(P.h)*cp*P.speed;
+    const prev={x:P.x,y:P.y,z:P.z};
+    P.x+=P.vx*dt;P.y+=P.vy*dt;P.z+=P.vz*dt;
+    checkRings(prev);
+    const gh=terrainH(P.x,P.z);altAGL=P.y-gh;
+    const onRwy=Math.abs(P.x)<23&&Math.abs(P.z)<665&&gh<0.6;
+    if(P.y-1.6<=gh){
+      const gentle=P.vy>-4.6&&Math.abs(P.r)<0.35&&P.p<0.25&&P.p>-0.2&&P.speed<90;
+      if(gentle&&onRwy){P.grounded=true;P.y=gh+1.7;P.p=0;P.r=0;
+        if(missionDone){doWin(P.vy);return}
+        toast('فرود نرم 👌 برای ادامهٔ مأموریت دوباره برخیز')}
+      else{doCrash();return}
+    }
+  }
+  overW=P.speed>108;lowW=!P.grounded&&altAGL<30&&P.vy<-2;
+  maxAlt=Math.max(maxAlt,P.y);maxSpd=Math.max(maxSpd,P.speed*3.6);flightT+=dt;
+  if(!hintThr&&flightT>1.2){hintThr=true;toast('W را نگه دار تا گاز بگیری',true)}
+  if(!hintRot&&!P.grounded===false&&P.speed>68&&P.grounded){hintRot=true;toast('حالا با ↑ دماغه را بالا بکش',true)}
+  if(!hintBank&&!P.grounded){bankT+=dt;if(bankT>5){hintBank=true;toast('با ← و → بانک بده و دور بزن')}}
+}
+function doCrash(){mode='crash';crashT=0;shake=1.4;boom();
+  for(let i=0;i<70;i++){const a=Math.random()*TAU,e=Math.random()*Math.PI,s=4+Math.random()*26;
+    particles.push({x:plane.x,y:plane.y,z:plane.z,vx:Math.cos(a)*Math.cos(e)*s,
+      vy:Math.abs(Math.sin(e))*s*0.9+3,vz:Math.sin(a)*Math.cos(e)*s,
+      life:0.5+Math.random()*0.9,t:0,r:2+Math.random()*5,fire:true})}
+  for(let i=0;i<26;i++)particles.push({x:plane.x+(Math.random()-.5)*4,y:plane.y,z:plane.z+(Math.random()-.5)*4,
+    vx:(Math.random()-.5)*4,vy:2+Math.random()*4,vz:(Math.random()-.5)*4,
+    life:1.5+Math.random()*1.5,t:0,r:5+Math.random()*8,fire:false})}
+function doWin(vy){mode='win';winT=0;const v=Math.abs(vy);
+  document.getElementById('wGrade').textContent=v<=1.2?'فرود مخملی':v<=2.5?'فرود نرم':'قابل قبول';
+  ding();setTimeout(ding,250)}
+
+/* ================= دوربین ================= */
+function updateCam(dt){
+  if(mode==='attract'){const a=tG*0.05;
+    cam.x=Math.sin(a)*470;cam.z=350+Math.cos(a)*470;cam.y=95+16*Math.sin(tG*0.11);
+    const tx=0,ty=40,tz=1400;cam.h=Math.atan2(tx-cam.x,tz-cam.z);
+    cam.p=Math.atan2(ty-cam.y,Math.hypot(tx-cam.x,tz-cam.z));cam.r=0;return}
+  const P=plane;
+  if(viewCockpit){
+    const cp=Math.cos(P.p),sh=Math.sin(P.h),ch=Math.cos(P.h);
+    cam.x=P.x+sh*cp*0.7;cam.y=P.y+Math.sin(P.p)*0.7+0.55;cam.z=P.z+ch*cp*0.7;
+    cam.h=P.h;cam.p=P.p;cam.r=P.r;
+  }else{
+    const cp=Math.cos(P.p),fx=Math.sin(P.h)*cp,fy=Math.sin(P.p),fz=Math.cos(P.h)*cp;
+    const ex=P.x-fx*16,ey=P.y-fy*16+5.2,ez=P.z-fz*16;
+    const k=1-Math.exp(-6*dt);
+    cam.x=lerp(cam.x,ex,k);cam.y=lerp(cam.y,ey,k);cam.z=lerp(cam.z,ez,k);
+    cam.h=lerpAng(cam.h,P.h,1-Math.exp(-8*dt));cam.p=lerp(cam.p,P.p*0.85,1-Math.exp(-8*dt));
+    cam.r=lerp(cam.r,P.r*0.55,1-Math.exp(-6*dt));
+  }
+}
+
+/* ================= پروژه‌کش ================= */
+const NEAR=0.4;let CH=1,SH=0,CP=1,SP=0,CR=1,SR=0,FOC=800;
+function camTrig(){CH=Math.cos(cam.h);SH=Math.sin(cam.h);CP=Math.cos(cam.p);SP=Math.sin(cam.p);
+  CR=Math.cos(cam.r);SR=Math.sin(cam.r);FOC=focal*(viewCockpit?1:1-clamp(plane.speed,0,120)*0.0011)}
+function toCam(p){const dx=p.x-cam.x,dy=p.y-cam.y,dz=p.z-cam.z;
+  const x1=dx*CH-dz*SH,z1=dx*SH+dz*CH;
+  return{x:x1,y:dy*CP-z1*SP,z:dy*SP+z1*CP}}
+function camToScr(c){const x3=c.x*CR+c.y*SR,y3=-c.x*SR+c.y*CR;
+  return{x:W2+x3*FOC/c.z,y:H2-y3*FOC/c.z}}
+function project(p){const c=toCam(p);if(c.z<NEAR)return null;return camToScr(c)}
+function projectPoly(pts){const cs=pts.map(toCam),out=[];
+  for(let k=0;k<cs.length;k++){const a=cs[k],b=cs[(k+1)%cs.length],ain=a.z>=NEAR;
+    if(ain)out.push(a);
+    if(ain!==(b.z>=NEAR)){const t=(NEAR-a.z)/(b.z-a.z);
+      out.push({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:NEAR})}}
+  if(out.length<3)return null;return out.map(camToScr)}
+function fillPoly(pts,style,alpha){const s=projectPoly(pts);if(!s)return;
+  ctx.globalAlpha=alpha===undefined?1:alpha;ctx.fillStyle=style;ctx.beginPath();
+  ctx.moveTo(s[0].x,s[0].y);for(let i=1;i<s.length;i++)ctx.lineTo(s[i].x,s[i].y);
+  ctx.closePath();ctx.fill();ctx.globalAlpha=1}
+const rgb=c=>'rgb('+(c[0]|0)+','+(c[1]|0)+','+(c[2]|0)+')';
+const mix3=(a,b,t)=>[lerp(a[0],b[0],t),lerp(a[1],b[1],t),lerp(a[2],b[2],t)];
+
+/* ================= آسمان و دوردست ================= */
+function drawSky(){
+  const hy=H2+focal*Math.tan(clamp(cam.p,-1.2,1.2));
+  ctx.save();ctx.translate(W2,H2);ctx.rotate(-cam.r);ctx.translate(0,hy-H2);
+  const R=Math.max(W,H)*2.4;
+  let g=ctx.createLinearGradient(0,-R,0,0);
+  g.addColorStop(0,'#152f4c');g.addColorStop(.45,'#3f6f9b');g.addColorStop(.8,'#c98d63');g.addColorStop(1,'#f7b673');
+  ctx.fillStyle=g;ctx.fillRect(-R,-R,R*2,R);
+  g=ctx.createLinearGradient(0,0,0,R);
+  g.addColorStop(0,'#e9b57e');g.addColorStop(.3,'#a58a6f');g.addColorStop(1,'#5d5a52');
+  ctx.fillStyle=g;ctx.fillRect(-R,0,R*2,R);
+  ctx.restore();
+  const sd={x:cam.x+SUN.x*9000,y:cam.y+SUN.y*9000,z:cam.z+SUN.z*9000},sp=project(sd);
+  if(sp){const r0=H*0.05;
+    let g=ctx.createRadialGradient(sp.x,sp.y,0,sp.x,sp.y,r0*6);
+    g.addColorStop(0,'rgba(255,241,207,.95)');g.addColorStop(.18,'rgba(255,224,170,.5)');g.addColorStop(1,'rgba(255,210,150,0)');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(sp.x,sp.y,r0*6,0,TAU);ctx.fill();
+    ctx.fillStyle='#fff4dc';ctx.beginPath();ctx.arc(sp.x,sp.y,r0,0,TAU);ctx.fill()}
+}
+function drawMountains(){
+  const layers=[{off:0,hs:620,col:mix3([104,116,140],FOG,.72)},{off:37,hs:380,col:mix3([78,94,116],FOG,.45)}];
+  for(const L of layers){ctx.fillStyle=rgb(L.col);ctx.beginPath();let started=false;
+    for(let a=cam.h-2.7;a<=cam.h+2.7;a+=0.06){
+      const hgt=L.hs*(0.3+vnoise(Math.cos(a)*2.1+L.off,Math.sin(a)*2.1+L.off));
+      const p=project({x:cam.x+Math.sin(a)*9000,y:hgt,z:cam.z+Math.cos(a)*9000});
+      if(p){if(!started){ctx.moveTo(p.x,H*2);ctx.lineTo(p.x,p.y);started=true}else ctx.lineTo(p.x,p.y)}}
+    if(started){ctx.lineTo(W2+ (W),H*2);ctx.closePath();ctx.fill()}}
+}
+function drawClouds(dt){const B=22000;
+  for(const c of clouds){if(mode!=='attract'&&!paused)c.x+=4*dt;
+    const rx=((c.x-cam.x)%B+B*1.5)%B-B/2,rz=((c.z-cam.z)%B+B*1.5)%B-B/2,ry=c.y-cam.y;
+    const cz=toCam({x:cam.x+rx,y:cam.y+ry,z:cam.z+rz});
+    if(cz.z<80||cz.z>11000)continue;const s=c.s*FOC/cz.z,p=camToScr(cz);
+    ctx.globalAlpha=clamp(1.25-cz.z/9000,0,.85);
+    ctx.drawImage(c.sp,p.x-s,p.y-s*0.45,s*2,s);ctx.globalAlpha=1}}
+
+/* ================= زمین، باند، سازه‌ها ================= */
+function drawTerrain(){
+  const i0=Math.floor((cam.x-RG)/CELL),i1=Math.ceil((cam.x+RG)/CELL),
+        j0=Math.floor((cam.z-RG)/CELL),j1=Math.ceil((cam.z+RG)/CELL);
+  const nx=i1-i0+1,nz=j1-j0+1,Hg=new Float32Array(nx*nz);
+  for(let i=0;i<nx;i++)for(let j=0;j<nz;j++)Hg[i*nz+j]=terrainH((i0+i)*CELL,(j0+j)*CELL);
+  const list=[];
+  for(let i=i0;i<i1;i++)for(let j=j0;j<j1;j++){
+    const x0=i*CELL,x1=x0+CELL,z0=j*CELL,z1=z0+CELL;
+    const cxm=(x0+x1)/2,czm=(z0+z1)/2,dx=cxm-cam.x,dz=czm-cam.z;
+    const zc=dx*SH+dz*CH,xc=dx*CH-dz*SH;
+    if(zc<-100||Math.abs(xc)>(zc+500)*1.35)continue;
+    const d2=dx*dx+dz*dz;if(d2>RG*RG*1.05)continue;
+    const ii=i-i0,jj=j-j0,h00=Hg[ii*nz+jj],h10=Hg[(ii+1)*nz+jj],h11=Hg[(ii+1)*nz+jj+1],h01=Hg[ii*nz+jj+1];
+    const hm=(h00+h10+h11+h01)/4;
+    const nxv=-(h10-h00)/CELL,nzv=-(h01-h00)/CELL,ln=Math.sqrt(nxv*nxv+1+nzv*nzv);
+    const li=0.72+0.4*clamp((nxv*SUN.x+SUN.y+nzv*SUN.z)/ln,0,1);
+    let col=pal(hm);col=[col[0]*li,col[1]*li,col[2]*li];
+    const fog=Math.pow(d2/(RG*RG),0.75)*0.92;col=mix3(col,FOG,fog);
+    const pts=[{x:x0,y:h00,z:z0},{x:x1,y:h10,z:z0},{x:x1,y:h11,z:z1},{x:x0,y:h01,z:z1}];
+    list.push({d:d2,pts,col});
+    if(Math.min(h00,h10,h11,h01)<WL){
+      const sh2=Math.sin(z0*0.05+x0*0.03+tG*1.5)*6;
+      list.push({d:d2-0.5,pts:[{x:x0,y:WL,z:z0},{x:x1,y:WL,z:z0},{x:x1,y:WL,z:z1},{x:x0,y:WL,z:z1}],
+        col:mix3([23,68+sh2,86+sh2],FOG,fog)})}
+  }
+  // باند و خطوط
+  const Y=0.12,quad=(x0,z0,x1,z1,y,c,d)=>list.push({d:d!==undefined?d:((x0+x1)/2-cam.x)**2+((z0+z1)/2-cam.z)**2,
+    pts:[{x:x0,y,z:z0},{x:x1,y,z:z0},{x:x1,y,z:z1},{x:x0,y,z:z1}],col:c});
+  quad(-22,-640,22,640,Y,[52,55,62]);
+  quad(-21.2,-640,-20.4,640,Y+.1,[220,220,212]);quad(20.4,-640,21.2,640,Y+.1,[220,220,212]);
+  for(let z=-560;z<=540;z+=60)quad(-0.5,z,0.5,z+26,Y+.12,[235,235,228]);
+  for(const ze of[-636,606])for(let x=-17;x<=17;x+=5.6)quad(x,ze,x+2.4,ze+28,Y+.12,[235,235,228]);
+  list.sort((a,b)=>b.d-a.d);
+  for(const q of list)fillPoly(q.pts,rgb(q.col));
+  // چراغ‌های لبهٔ باند
+  for(let z=-640;z<=640;z+=64)for(const x of[-23.5,23.5]){
+    const p=project({x,y:0.6,z});if(!p||p.z>1500)continue;
+    const a=0.55+0.4*Math.sin(tG*3+z*0.1);
+    ctx.fillStyle='rgba(255,190,100,'+a+')';ctx.beginPath();ctx.arc(p.x,p.y,clamp(90/p.z*2,1,3),0,TAU);ctx.fill()}
+  // برج و آشیانه‌ها
+  drawBox(78,0,-180,36,12,26,[152,88,62]);drawBox(86,0,-118,24,10,20,[118,122,128]);
+  drawBox(-70,0,240,12,26,12,[178,174,164]);drawBox(-70,26,240,16,5,16,[58,70,82]);
+  const bp=project({x:-70,y:32.5,z:240});
+  if(bp&&Math.sin(tG*2.5)>0.55){ctx.fillStyle='rgba(255,80,60,.9)';ctx.beginPath();ctx.arc(bp.x,bp.y,3,0,TAU);ctx.fill()}
+}
+function drawBox(cx,y0,cz,w,h,d,col){
+  const x0=cx-w/2,x1=cx+w/2,z0=cz-d/2,z1=cz+d/2,y1=y0+h;
+  const f=[[x0,y0,z0,x1,y0,z0,x1,y1,z0,x0,y1,z0],[x1,y0,z1,x0,y0,z1,x0,y1,z1,x1,y1,z1],
+           [x1,y0,z0,x1,y0,z1,x1,y1,z1,x1,y1,z0],[x0,y0,z1,x0,y0,z0,x0,y1,z0,x0,y1,z1],
+           [x0,y1,z0,x1,y1,z0,x1,y1,z1,x0,y1,z1]];
+  const sh=[1,.92,.8,.72,1.12],faces=[];
+  for(let i=0;i<5;i++){const v=f[i],pts=[{x:v[0],y:v[1],z:v[2]},{x:v[3],y:v[4],z:v[5]},
+      {x:v[6],y:v[7],z:v[8]},{x:v[9],y:v[10],z:v[11]}];
+    let dd=0;for(const p of pts)dd+=(p.x-cam.x)**2+(p.z-cam.z)**2;
+    faces.push({pts,d:dd,li:sh[i]})}
+  faces.sort((a,b)=>b.d-a.d);
+  for(const fc of faces)fillPoly(fc.pts,rgb([col[0]*fc.li,col[1]*fc.li,col[2]*fc.li]));
+}
+
+/* ================= حلقه‌ها و پرتو ================= */
+function drawRings(){
+  const nr=nextRing();
+  if(nr){const u={x:nr.nz,z:-nr.nx};
+    for(const off of[-4,4]){
+      const pts=[{x:nr.x+u.x*off,y:nr.y,z:nr.z+u.z*off},
+                 {x:nr.x+u.x*off,y:nr.y+380,z:nr.z+u.z*off},
+                 {x:nr.x-u.x*off,y:nr.y+380,z:nr.z-u.z*off},
+                 {x:nr.x-u.x*off,y:nr.y,z:nr.z-u.z*off}];
+      fillPoly(pts,'rgba(255,196,107,'+(0.09+0.05*Math.sin(tG*3))+')')}
+  }
+  for(const r of RINGS){
+    const c=toCam(r);if(c.z<4||c.z>4500)continue;const C=camToScr(c);
+    const R=r.R,u={x:r.nz,y:0,z:-r.nx};
+    const pa=project({x:r.x+u.x*R,y:r.y,z:r.z+u.z*R}),pb=project({x:r.x,y:r.y+R,z:r.z});
+    if(!pa||!pb)continue;
+    const A={x:pa.x-C.x,y:pa.y-C.y},B={x:pb.x-C.x,y:pb.y-C.y};
+    ctx.save();ctx.translate(C.x,C.y);ctx.transform(A.x/R,A.y/R,B.x/R,B.y/R,0,0);
+    ctx.beginPath();ctx.arc(0,0,R,0,TAU);
+    let main,glow,lw=2*2.4/R;
+    if(r.passed){main='rgba(125,255,168,.28)';glow='rgba(125,255,168,.12)'}
+    else if(r===nr){const pl=1+0.18*Math.sin(tG*4.5);main='rgba(255,196,107,.95)';glow='rgba(255,170,80,.4)';lw*=pl}
+    else{main='rgba(255,158,74,.55)';glow='rgba(255,158,74,.2)'}
+    ctx.fillStyle='rgba(255,185,95,.06)';ctx.fill();
+    ctx.strokeStyle=glow;ctx.lineWidth=lw*2.2;ctx.stroke();
+    ctx.strokeStyle=main;ctx.lineWidth=lw;ctx.stroke();
+    ctx.restore()}
+}
+
+/* ================= پرندگان و ذرات ================= */
+function drawBirds(){const bx=350,bz=950;
+  for(const b of birds){if(paused||mode==='attract')0;else b.a+=b.w*0.016;
+    const x=bx+Math.cos(b.a)*b.r,z=bz+Math.sin(b.a)*b.r,y=b.h+Math.sin(tG*0.7+b.ph)*6;
+    const p=project({x,y,z});if(!p||p.z>900)continue;
+    const s=clamp(60/p.z*8,1,9),fl=Math.sin(tG*9+b.ph)*0.9;
+    ctx.strokeStyle='#20242a';ctx.lineWidth=Math.max(1,s*0.18);ctx.beginPath();
+    ctx.moveTo(p.x-s,p.y-fl*s*0.5);ctx.quadraticCurveTo(p.x,p.y+s*0.2,p.x+s,p.y-fl*s*0.5);ctx.stroke()}}
+function updateParticles(dt){for(let i=particles.length-1;i>=0;i--){const p=particles[i];
+  p.t+=dt;if(p.t>p.life){particles.splice(i,1);continue}
+  if(p.fire)p.vy-=9*dt*0.5;else p.vy+=1.5*dt;
+  p.x+=p.vx*dt;p.y=Math.max(p.y+p.vy*dt,terrainH(p.x,p.z)+0.3);p.z+=p.vz*dt}}
+function drawParticles(){for(const p of particles){const s=project(p);if(!s)continue;
+  const k=1-p.t/p.life,r=p.r*(p.fire?k:1+p.t*1.5)*FOC/(p.z? (toCam(p).z):100)*0.06+1.5;
+  ctx.globalAlpha=k*(p.fire?.9:.35);
+  ctx.fillStyle=p.fire?(k>0.5?'#ffcf6e':'#ff7a3c'):'#7d8288';
+  ctx.beginPath();ctx.arc(s.x,s.y,r,0,TAU);ctx.fill();ctx.globalAlpha=1}}
+
+/* ================= هواپیما ================= */
+const FACES=[
+ {v:[[.42,.42,1.5],[.42,-.18,1.5],[.3,.02,-2.7],[.3,.42,-2.7]],c:[233,226,205]},
+ {v:[[-.42,.42,1.5],[-.42,-.18,1.5],[-.3,.02,-2.7],[-.3,.42,-2.7]],c:[233,226,205]},
+ {v:[[.42,.42,1.5],[-.42,.42,1.5],[-.3,.42,-2.7],[.3,.42,-2.7]],c:[244,239,224]},
+ {v:[[.42,-.18,1.5],[-.42,-.18,1.5],[-.3,.02,-2.7],[.3,.02,-2.7]],c:[206,197,176]},
+ {v:[[0,.14,3.3],[.42,.42,1.5],[.42,-.18,1.5]],c:[226,218,196]},
+ {v:[[0,.14,3.3],[-.42,-.18,1.5],[-.42,.42,1.5]],c:[226,218,196]},
+ {v:[[0,.14,3.3],[.42,.42,1.5],[-.42,.42,1.5]],c:[240,234,215]},
+ {v:[[0,.14,3.3],[-.42,-.18,1.5],[.42,-.18,1.5]],c:[203,194,173]},
+ {v:[[.3,.42,-2.7],[-.3,.42,-2.7],[-.3,.02,-2.7],[.3,.02,-2.7]],c:[188,180,162]},
+ {v:[[.35,.12,1.15],[3.5,.3,-.1],[3.5,.3,-.85],[.35,.12,-.55]],c:[198,74,54],dc:1},
+ {v:[[-.35,.12,1.15],[-3.5,.3,-.1],[-3.5,.3,-.85],[-.35,.12,-.55]],c:[198,74,54],dc:1},
+ {v:[[.18,.4,-2.1],[1.15,.45,-2.55],[1.15,.45,-2.95],[.18,.4,-2.8]],c:[198,74,54],dc:1},
+ {v:[[-.18,.4,-2.1],[-1.15,.45,-2.55],[-1.15,.45,-2.95],[-.18,.4,-2.8]],c:[198,74,54],dc:1},
+ {v:[[0,.42,-1.5],[0,1.75,-2.6],[0,.42,-2.8]],c:[198,74,54],dc:1},
+ {v:[[.22,.42,1.25],[-.22,.42,1.25],[-.2,.62,.55],[.2,.62,.55]],c:[40,52,64]},
+ {v:[[.2,.62,.55],[-.2,.62,.55],[-.24,.42,-.1],[.24,.42,-.1]],c:[33,44,55]}];
+function drawPlane(){
+  if(mode==='crash')return;
+  if(viewCockpit&&mode==='fly')return;
+  const P=plane,sh=Math.sin(P.h),ch=Math.cos(P.h),cp=Math.cos(P.p),sp=Math.sin(P.p);
+  const F={x:sh*cp,y:sp,z:ch*cp},R0={x:ch,y:0,z:-sh};
+  const U0={x:-R0.z*F.y? 0:0,y:0,z:0};
+  U0.x=R0.y*F.z-R0.z*F.y;U0.y=R0.z*F.x-R0.x*F.z;U0.z=R0.x*F.y-R0.y*F.x;
+  const cr=Math.cos(P.r),sr=Math.sin(P.r);
+  const Rv={x:R0.x*cr-U0.x*sr,y:R0.y*cr-U0.y*sr,z:R0.z*cr-U0.z*sr};
+  const Uv={x:U0.x*cr+R0.x*sr,y:U0.y*cr+R0.y*sr,z:U0.z*cr+R0.z*sr};
+  // سایه
+  const gh=terrainH(P.x,P.z),sp2=project({x:P.x,y:gh+0.15,z:P.z});
+  if(sp2&&P.y-gh<250){ctx.globalAlpha=clamp(0.35-(P.y-gh)*0.002,0,.35);ctx.fillStyle='#000';
+    ctx.beginPath();ctx.ellipse(sp2.x,sp2.y,1400/sp2.z,340/sp2.z,0,0,TAU);ctx.fill();ctx.globalAlpha=1}
+  const tf=v=>({x:P.x+Rv.x*v[0]+Uv.x*v[1]+F.x*v[2],
+                y:P.y+Rv.y*v[0]+Uv.y*v[1]+F.y*v[2],
+                z:P.z+Rv.z*v[0]+Uv.z*v[1]+F.z*v[2]});
+  const faces=[];
+  for(const f of FACES){const pts=f.v.map(tf);
+    const c0=toCam(pts[0]);if(c0.z<NEAR&&toCam(pts[1]).z<NEAR&&toCam(pts[2]).z<NEAR)continue;
+    if(!f.dc){const e1={x:pts[1].x-pts[0].x,y:pts[1].y-pts[0].y,z:pts[1].z-pts[0].z},
+      e2={x:pts[2].x-pts[0].x,y:pts[2].y-pts[0].y,z:pts[2].z-pts[0].z};
+      const n={x:e1.y*e2.z-e1.z*e2.y,y:e1.z*e2.x-e1.x*e2.z,z:e1.x*e2.y-e1.y*e2.x};
+      if(n.x*(pts[0].x-cam.x)+n.y*(pts[0].y-cam.y)+n.z*(pts[0].z-cam.z)>0)continue}
+    let dd=0;for(const p of pts)dd+=(p.x-cam.x)**2+(p.z-cam.z)**2;faces.push({pts,d:dd,f})}
+  faces.sort((a,b)=>b.d-a.d);
+  for(const fc of faces){const p0=fc.pts[0],p1=fc.pts[1],p2=fc.pts[2];
+    const e1={x:p1.x-p0.x,y:p1.y-p0.y,z:p1.z-p0.z},e2={x:p2.x-p0.x,y:p2.y-p0.y,z:p2.z-p0.z};
+    let nx=e1.y*e2.z-e1.z*e2.y,ny=e1.z*e2.x-e1.x*e2.z,nz=e1.x*e2.y-e1.y*e2.x;
+    const l=Math.hypot(nx,ny,nz)||1;nx/=l;ny/=l;nz/=l;
+    const li=0.68+0.42*clamp(Math.abs(nx*SUN.x+ny*SUN.y+nz*SUN.z),0,1);
+    fillPoly(fc.pts,rgb([fc.f.c[0]*li,fc.f.c[1]*li,fc.f.c[2]*li]))}
+  // ملخ و ارابه
+  const nose=tf([0,.14,3.45]),pn=project(nose);
+  if(pn){const pa=project({x:nose.x+Rv.x*1.4,y:nose.y+Rv.y*1.4,z:nose.z+Rv.z*1.4}),
+    pb=project({x:nose.x+Uv.x*1.4,y:nose.y+Uv.y*1.4,z:nose.z+Uv.z*1.4});
+    if(pa&&pb){ctx.save();ctx.translate(pn.x,pn.y);
+      ctx.transform((pa.x-pn.x)/1.4,(pa.y-pn.y)/1.4,(pb.x-pn.x)/1.4,(pb.y-pn.y)/1.4,0,0);
+      ctx.globalAlpha=0.1+plane.thr*0.22;ctx.fillStyle='#dfe4ea';
+      ctx.beginPath();ctx.arc(0,0,1.4,0,TAU);ctx.fill();ctx.restore();ctx.globalAlpha=1}}
+  ctx.strokeStyle='#2a2d33';ctx.lineWidth=2;
+  for(const g of [[0.55,-0.15,0.35,0.72,-1.35,0.35],[-0.55,-0.15,0.35,-0.72,-1.35,0.35],[0,-0.2,2.3,0,-1.3,2.3]]){
+    const a=project(tf([g[0],g[1],g[2]])),b=project(tf([g[3],g[4],g[5]]));
+    if(a&&b){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+      ctx.fillStyle='#1c1e22';ctx.beginPath();ctx.arc(b.x,b.y,Math.max(1.5,60/b.z*3),0,TAU);ctx.fill()}}
+}
+
+/* ================= کابین ================= */
+function drawCockpitFrame(){
+  const Hc=H*0.8;
+  ctx.fillStyle='#0c1016';
+  ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(W*0.055,0);ctx.lineTo(W*0.12,Hc);ctx.lineTo(0,H*0.86);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(W,0);ctx.lineTo(W*0.945,0);ctx.lineTo(W*0.88,Hc);ctx.lineTo(W,H*0.86);ctx.closePath();ctx.fill();
+  ctx.fillRect(0,0,W,H*0.028);
+  ctx.beginPath();ctx.moveTo(0,H);ctx.lineTo(0,H*0.87);ctx.lineTo(W*0.16,Hc);ctx.lineTo(W*0.84,Hc);ctx.lineTo(W,H*0.87);ctx.lineTo(W,H);ctx.closePath();
+  const g=ctx.createLinearGradient(0,Hc,0,H);g.addColorStop(0,'#161c25');g.addColorStop(1,'#0a0e13');
+  ctx.fillStyle=g;ctx.fill();ctx.strokeStyle='#2c3746';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(W*0.16,Hc);ctx.lineTo(W*0.84,Hc);ctx.stroke();
+  const gauge=(cx,frac,lbl)=>{const r=H*0.052;
+    ctx.fillStyle='#10161e';ctx.beginPath();ctx.arc(cx,H*0.915,r,0,TAU);ctx.fill();
+    ctx.strokeStyle='#3a4656';ctx.lineWidth=2;ctx.stroke();
+    ctx.strokeStyle='rgba(255,180,84,.6)';ctx.lineWidth=1;
+    for(let i=0;i<=10;i++){const a=Math.PI*0.75+i/10*Math.PI*1.5;
+      ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*r*0.82,H*0.915+Math.sin(a)*r*0.82);
+      ctx.lineTo(cx+Math.cos(a)*r*0.94,H*0.915+Math.sin(a)*r*0.94);ctx.stroke()}
+    const a=Math.PI*0.75+clamp(frac,0,1)*Math.PI*1.5;
+    ctx.strokeStyle='#ffcf8a';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(cx,H*0.915);
+    ctx.lineTo(cx+Math.cos(a)*r*0.72,H*0.915+Math.sin(a)*r*0.72);ctx.stroke();
+    ctx.fillStyle='#9fb0c3';ctx.font='10px Vazirmatn';ctx.textAlign='center';ctx.fillText(lbl,cx,H*0.915+r+13)};
+  gauge(W*0.32,plane.speed/125,'سرعت');gauge(W*0.68,(plane.y%500)/500,'ارتفاع');
+  ctx.fillStyle='#ffb454';ctx.font='12px Vazirmatn';ctx.textAlign='center';
+  ctx.fillText('گاز '+fa(Math.round(plane.thr*100))+'٪',W2,H*0.93);
+}
+
+/* ================= HUD ================= */
+function drawHUD(){
+  const P=plane,amb='rgba(255,196,107,';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  // نوار جهت
+  const tw=340,ty=30;
+  ctx.strokeStyle=amb+'.85)';ctx.fillStyle=amb+'.9)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(W2,ty+16);ctx.lineTo(W2-6,ty+24);ctx.lineTo(W2+6,ty+24);ctx.closePath();ctx.fill();
+  const hdgDeg=((P.h*180/Math.PI)%360+360)%360;
+  for(let d=Math.floor((hdgDeg-42)/5)*5;d<=hdgDeg+42;d+=5){
+    const dd=((d%360)+360)%360,x=W2+(d-hdgDeg)/42*(tw/2);
+    if(x<W2-tw/2||x>W2+tw/2)continue;
+    const big=dd%30===0;
+    ctx.beginPath();ctx.moveTo(x,ty);ctx.lineTo(x,ty+(big?10:5));ctx.stroke();
+    if(big){ctx.font='13px Lalezar';
+      const CARD={0:'ش',90:'خ',180:'ج',270:'غ'}[dd];
+      ctx.fillText(CARD?CARD+' '+fa(dd):fa(dd),x,ty+20)}}
+  ctx.font='15px Lalezar';ctx.fillStyle=amb+'1)';
+  ctx.fillText(fa(Math.round(hdgDeg)%360)+'°',W2,ty+40);
+  // راهنمای حلقهٔ بعد
+  const nr=nextRing();
+  if(nr){const brg=Math.atan2(nr.x-P.x,nr.z-P.z),diff=angDiff(brg,P.h);
+    const bx=W2+clamp(diff/(42*Math.PI/180),-1,1)*(tw/2);
+    ctx.fillStyle=amb+'.9)';ctx.beginPath();ctx.moveTo(bx,ty-14);ctx.lineTo(bx-5,ty-22);ctx.lineTo(bx+5,ty-22);ctx.closePath();ctx.fill();
+    ctx.font='12px Vazirmatn';ctx.fillText('تا حلقهٔ بعد '+fa(Math.round(Math.hypot(nr.x-P.x,nr.z-P.z)))+' م',W2,ty+58)}
+  // نردبان پیچ
+  ctx.save();ctx.translate(W2,H2);ctx.rotate(-P.r);
+  for(let p=-30;p<=30;p+=10){if(p===0)continue;
+    const y=(P.p-p)*FOC*0.9;if(Math.abs(y)>H*0.45)continue;
+    const w=p%20===0?110:70;
+    ctx.strokeStyle=amb+(p<0?'.5)':'.7)');ctx.lineWidth=p%20===0?2:1.2;
+    if(p<0)ctx.setLineDash([8,6]);ctx.beginPath();ctx.moveTo(-w,y);ctx.lineTo(w,y);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle=amb+'.8)';ctx.font='11px Vazirmatn';ctx.fillText(fa(Math.abs(p)),w+20,y)}
+  const hy=P.p*FOC*0.9;ctx.strokeStyle=amb+'.95)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(-210,hy);ctx.lineTo(210,hy);ctx.stroke();
+  ctx.restore();
+  // نشانگر مسیر پرواز
+  if(!P.grounded){const fp=project({x:P.x+P.vx*40,y:P.y+P.vy*40,z:P.z+P.vz*40});
+    if(fp){ctx.strokeStyle='rgba(160,255,180,.9)';ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(fp.x,fp.y,7,0,TAU);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(fp.x-18,fp.y);ctx.lineTo(fp.x-7,fp.y);ctx.moveTo(fp.x+7,fp.y);ctx.lineTo(fp.x+18,fp.y);
+      ctx.moveTo(fp.x,fp.y-11);ctx.lineTo(fp.x,fp.y-7);ctx.stroke()}}
+  // نوار سرعت
+  const spd=P.speed*3.6,sx=84;
+  tape(sx,H2,spd,20,999,v=>fa(Math.round(v)),'سرعت کم/س');
+  box(sx,H2,fa(Math.round(spd)));
+  // نوار ارتفاع
+  const ax=W-84;tape(ax,H2,P.y,25,999,v=>fa(Math.round(v)),'ارتفاع م');
+  box(ax,H2,fa(Math.round(Math.max(0,P.y))));
+  // سرعت عمودی
+  const vy=P.grounded?0:P.vy,vyy=H2-clamp(vy/12,-1,1)*90;
+  ctx.strokeStyle=amb+'.7)';ctx.beginPath();ctx.moveTo(ax+44,H2-100);ctx.lineTo(ax+44,H2+100);ctx.stroke();
+  ctx.fillStyle=amb+'.95)';ctx.beginPath();ctx.moveTo(ax+44,vyy);ctx.lineTo(ax+52,vyy-5);ctx.lineTo(ax+52,vyy+5);ctx.closePath();ctx.fill();
+  ctx.font='11px Vazirmatn';ctx.fillText(fa(Math.abs(vy).toFixed(1)),ax+52,H2+116);
+  // گاز
+  const gx=30,ghh=130,gy=H-60;
+  ctx.strokeStyle=amb+'.6)';ctx.strokeRect(gx-8,gy-ghh,16,ghh);
+  ctx.fillStyle=amb+'.85)';ctx.fillRect(gx-6,gy-2-P.thr*(ghh-4),12,P.thr*(ghh-4));
+  ctx.font='12px Vazirmatn';ctx.fillText('گاز',gx,gy+16);ctx.fillText(fa(Math.round(P.thr*100))+'٪',gx,gy-ghh-12);
+  // حلقه‌ها
+  ctx.font='14px Lalezar';ctx.fillText('حلقه‌ها '+fa(score)+'/'+fa(RN),W2,H-52);
+  for(let i=0;i<RN;i++){const x=W2+(i-(RN-1)/2)*16;
+    ctx.beginPath();ctx.arc(x,H-32,4.5,0,TAU);
+    if(RINGS[i].passed){ctx.fillStyle=amb+'.95)';ctx.fill()}
+    else{ctx.strokeStyle=amb+(RINGS[i]===nr?'1)':'0.45)');ctx.lineWidth=RINGS[i]===nr?2:1;ctx.stroke()}}
+  // هشدارها
+  if((stallW||overW||lowW)&&Math.sin(tG*10)>-0.2){
+    ctx.font='34px Lalezar';ctx.fillStyle=stallW?'rgba(255,93,73,.95)':amb+'.95)';
+    ctx.fillText(stallW?'واماند!':overW?'سرعت بیش از حد!':'ارتفاع کم!',W2,H*0.3)}
+  if(P.grounded&&mode==='fly'){ctx.font='13px Vazirmatn';ctx.fillStyle=amb+'.7)';
+    ctx.fillText(P.speed*3.6<105?'برای برخاست: گاز کامل، سپس در ~۱۱۰ کم/س با ↑ دماغه بالا':'ترمز: Space',W2,H*0.62)}
+}
+function tape(x,cy,val,step,range,lbl,axis){
+  ctx.strokeStyle=amb+'.55)';ctx.fillStyle=amb+'.8)';ctx.lineWidth=1;ctx.font='11px Vazirmatn';
+  const vh=H*0.18,per=vh/2/ (range==='speed'?80:100);
+  ctx.save();ctx.beginPath();ctx.rect(x-46,cy-vh,x>W2?92:92,vh*2);ctx.clip();
+  const span=range==='speed'?80:100;
+  for(let v=Math.floor((val-span)/step)*step;v<=val+span;v+=step){
+    const y=cy-(v-val)*vh/span;if(y<cy-vh||y>cy+vh)continue;
+    ctx.beginPath();ctx.moveTo(x-(x>W2?0:10),y);ctx.lineTo(x+(x>W2?10:0)+ (x>W2?10:-10) - (x>W2?0:0),y);
+    ctx.moveTo(x-10,y);ctx.lineTo(x+10,y);ctx.stroke();
+    ctx.fillText(fa(Math.round(v)),x,y-9)}
+  ctx.restore();
+  ctx.font='11px Vazirmatn';ctx.fillStyle=amb+'.7)';ctx.fillText(axis==='speed'?'سرعت':'ارتفاع',x,cy-vh-14);
+}
+function box(x,y,txt){ctx.fillStyle='rgba(12,16,22,.8)';ctx.strokeStyle=amb+'.9)';ctx.lineWidth=1.5;
+  const w=58,h=24;ctx.fillRect(x-w/2,y-h/2,w,h);ctx.strokeRect(x-w/2,y-h/2,w,h);
+  ctx.fillStyle=amb+'1)';ctx.font='16px Lalezar';ctx.fillText(txt,x,y+1)}
+
+/* ================= حلقهٔ اصلی ================= */
+let last=performance.now();
+function frame(now){
+  const dt=Math.min((now-last)/1000,0.05);last=now;
+  if(!paused){tG+=dt;
+    if(mode==='fly')updatePlane(dt);
+    if(mode==='win'){winT+=dt;plane.speed=Math.max(0,plane.speed-14*dt);
+      plane.x+=Math.sin(plane.h)*plane.speed*dt;plane.z+=Math.cos(plane.h)*plane.speed*dt;
+      if(winT>1.4){showWin();mode='winDone'}}
+    if(mode==='crash'){crashT+=dt;if(crashT>1.6){showCrash();mode='crashDone'}}
+    updateParticles(dt);updateCam(dt);
+    shake=Math.max(0,shake-dt*1.6)+(stallW&&mode==='fly'?0.02:0);
+    setAudio();
+  }
+  camTrig();
+  ctx.clearRect(0,0,W,H);
+  ctx.save();
+  if(shake>0.01)ctx.translate((Math.random()-.5)*shake*22,(Math.random()-.5)*shake*22);
+  drawSky();drawMountains();drawClouds(dt);drawTerrain();drawRings();drawBirds();
+  if(mode==='attract'){plane.x=0;plane.y=1.7;plane.z=-520;plane.h=0;plane.p=0;plane.r=0;plane.thr=0.15}
+  drawPlane();drawParticles();
+  ctx.restore();
+  if(mode!=='attract'){if(viewCockpit&&mode==='fly')drawCockpitFrame();drawHUD()}
+  requestAnimationFrame(frame);
+}
+
+/* ================= UI ================= */
+const $=id=>document.getElementById(id);
+function showOv(id){document.querySelectorAll('.ov').forEach(o=>o.classList.add('hide'));if(id)$(id).classList.remove('hide')}
+function startFlight(){initAudio();if(AC&&AC.state==='suspended')AC.resume();resetFlight();mode='fly';paused=false;showOv(null);
+  document.getElementById('bPse').innerHTML='توقف <b>P</b>'}
+function resetFlight(){Object.assign(plane,{x:0,y:1.7,z:-560,h:0,p:0,r:0,speed:0,thr:0,grounded:true,pi:0,ri:0});
+  for(const r of RINGS){r.passed=false;r.side=(plane.x-r.x)*r.nx+(plane.z-r.z)*r.nz}
+  score=0;missionDone=false;flightT=0;maxAlt=0;maxSpd=0;particles.length=0;
+  tookOff=false;hintThr=false;hintRot=false;hintBank=false;bankT=0;stallW=overW=lowW=false;
+  const cp=Math.cos(plane.p);cam.x=plane.x-16*Math.sin(plane.h)*cp;cam.y=plane.y+5.2;cam.z=plane.z-16*Math.cos(plane.h)*cp;
+  cam.h=plane.h;cam.p=0;cam.r=0}
+function fillStats(p){$(p+'Time').textContent=faTime(flightT);
+  $(p+'Ring').textContent=fa(score)+'/'+fa(RN);
+  $(p+'Alt').textContent=fa(Math.round(maxAlt));
+  if($(p+'Spd'))$(p+'Spd').textContent=fa(Math.round(maxSpd))}
+function showCrash(){fillStats('c');showOv('ovCrash')}
+function showWin(){fillStats('w');showOv('ovWin')}
+function setPause(v){if(mode!=='fly')return;paused=v;showOv(v?'ovPause':null);
+  document.getElementById('bPse').innerHTML=(v?'ادامه':'توقف')+' <b>P</b>'}
+function togglePause(){setPause(!paused)}
+function toggleView(){viewCockpit=!viewCockpit;
+  document.getElementById('bCam').innerHTML='دوربین <b>V</b> '+(viewCockpit?'🛩':'🎥')}
+function toggleHelp(){const h=$('ovHelp').classList.contains('hide');
+  if(h){if(mode==='fly')paused=true;showOv('ovHelp')}else{showOv(mode==='fly'&&paused?'ovPause':null);
+  if(mode==='fly'&&paused)setPause(true)}}
+$('btnStart').onclick=startFlight;
+$('btnResume').onclick=()=>setPause(false);
+$('btnRestart1').onclick=startFlight;$('btnRestart2').onclick=startFlight;$('btnRestart3').onclick=startFlight;
+$('btnCloseHelp').onclick=()=>{showOv(mode==='fly'&&paused?'ovPause':null)};
+$('bSnd').onclick=()=>{initAudio();toggleMute()};
+$('bCam').onclick=toggleView;$('bPse').onclick=togglePause;$('bHlp').onclick=toggleHelp;
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>شهرِ بازی — Game City</title>
+<meta name="description" content="شهرِ بازی: بازی‌های خانوادگی برای بچه‌ها. بازی کن، ایده بده، ما می‌سازیم.">
+<meta name="theme-color" content="#FFF4DC">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="شهرِ بازی">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preload" href="fonts/Vazirmatn-wght.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="topbar">
+    <a class="brand" href="./"><span id="logo"></span><span data-i18n="site">شهرِ بازی</span></a>
+    <div class="tools">
+      <button class="btn small" id="install" hidden data-i18n="install">📲 نصب روی صفحه</button>
+      <button class="btn small" id="lang" data-i18n="switchLang">English</button>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div>
+      <h1><span class="w1" data-i18n="heroA">شهرِ</span> <span class="w2" data-i18n="heroB">بازی</span></h1>
+      <p data-i18n="heroP">بازی کن، ایده بده، ما می‌سازیم!</p>
+      <div class="cta">
+        <a class="btn big green" href="#shelf" data-i18n="heroPlay">🎮 برو سراغ بازی‌ها</a>
+        <a class="btn big yellow" href="feedback.html?game=new-game" data-i18n="heroIdea">💡 ایدهٔ بازی جدید</a>
+      </div>
+    </div>
+    <div class="art" id="city"></div>
+  </section>
+  <div class="plank" aria-hidden="true"></div>
+
+  <main>
+    <section class="section" id="shelf">
+      <div class="section-title"><span class="dot" aria-hidden="true">🎮</span><h2 data-i18n="shelf">قفسهٔ بازی‌ها</h2></div>
+      <div class="shelf" id="cards"></div>
+    </section>
+
+    <section class="section">
+      <div class="idea-banner">
+        <div class="pic" id="newpic"></div>
+        <div>
+          <h2 data-i18n="newTitle">یک بازیِ تازه توی ذهنت داری؟</h2>
+          <p data-i18n="newP">بنویس یا نقاشی‌اش را بکش.</p>
+        </div>
+        <a class="btn big" href="feedback.html?game=new-game" data-i18n="newBtn">✏️ ایده‌ام را می‌گویم</a>
+      </div>
+    </section>
+
+    <section class="section" id="built">
+      <div class="section-title"><span class="dot" aria-hidden="true" style="background:var(--green)">🏗️</span><h2 data-i18n="wall">ایده‌هایی که ساختیم</h2></div>
+      <p class="section-sub" data-i18n="wallSub">ایده‌های شما که واقعاً ساخته شد.</p>
+      <div id="wall"></div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="row"><span data-i18n="foot">بدون تبلیغ · بدون ردیابی · ساخته‌شده برای خانواده</span><span id="ver" dir="ltr"></span></div>
+  </footer>
+</div>
+
+<dialog id="ios">
+  <h3 data-i18n="iosTitle">نصب روی آیفون یا آیپد</h3>
+  <ol><li data-i18n="ios1"></li><li data-i18n="ios2"></li><li data-i18n="ios3"></li></ol>
+  <form method="dialog"><button class="btn green" data-i18n="ok">باشه</button></form>
+</dialog>
+
+<script type="module" src="js/home.js"></script>
+</body>
+</html>

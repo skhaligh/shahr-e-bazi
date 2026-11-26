@@ -1,0 +1,752 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Gulp the City Hole</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap">
+<style>
+/* Layout: full-screen canvas city; HUD pills float on top; cards (menu, challenge, results) sit centred over a dimmed city */
+:root{
+  --bg:#e9efe4; --fg:#23302a; --muted:#64786c;
+  --panel:#fffdf7; --panel2:#eef3e8; --line:#d3dccb;
+  --accent:#2f8f6b; --accent-ink:#ffffff; --sun:#f2a93b; --gold:#f0b53a;
+  --good:#2f8f6b; --bad:#d9774a; --shadow:0 10px 30px rgba(20,40,30,.18);
+  --display:'Fredoka',system-ui,sans-serif; --body:'Nunito',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#141d18; --fg:#eef3ea; --muted:#9db3a4; --panel:#1f2a24; --panel2:#283630; --line:#3a4a41;
+  --accent:#4fbf93; --accent-ink:#0f1a14; --sun:#f5b654; --gold:#f3c15a; --good:#4fbf93; --bad:#ec9068;
+  --shadow:0 10px 30px rgba(0,0,0,.5); color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#141d18; --fg:#eef3ea; --muted:#9db3a4; --panel:#1f2a24; --panel2:#283630; --line:#3a4a41;
+  --accent:#4fbf93; --accent-ink:#0f1a14; --sun:#f5b654; --gold:#f3c15a; --good:#4fbf93; --bad:#ec9068;
+  --shadow:0 10px 30px rgba(0,0,0,.5); color-scheme:dark }
+
+html{height:100%;box-sizing:border-box}
+*,*::before,*::after{box-sizing:inherit}
+body{height:100%;margin:0;position:relative;overflow:hidden;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.4}
+canvas{display:block;width:100%;height:100%;touch-action:none;user-select:none;-webkit-user-select:none}
+h1,h2,h3{font-family:var(--display);font-weight:600;margin:0;text-wrap:balance;line-height:1.1}
+button{font:inherit;cursor:pointer;border:0;border-radius:999px;padding:10px 18px;font-weight:800;background:var(--panel2);color:var(--fg);transition:transform .08s}
+button:active{transform:scale(.97)}
+button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.primary{background:var(--accent);color:var(--accent-ink)}
+.ghost{background:transparent;border:2px solid var(--line)}
+
+/* HUD */
+#hud{position:absolute;left:0;right:0;top:0;display:flex;flex-wrap:wrap;gap:8px;align-items:center;pointer-events:none;
+  padding-top:calc(8px + env(safe-area-inset-top,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#hud>*{pointer-events:auto}
+.pill{background:var(--panel);border-radius:999px;padding:6px 12px;font-weight:800;display:flex;align-items:center;gap:8px;box-shadow:0 3px 10px rgba(0,0,0,.14);font-size:14px;font-variant-numeric:tabular-nums}
+.pill .lbl{color:var(--muted);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+#sizebar{width:110px;height:10px;border-radius:99px;background:var(--panel2);overflow:hidden;border:1px solid var(--line)}
+#sizefill{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--sun));transition:width .2s}
+#heir span{filter:grayscale(1);opacity:.45}
+#heir span.got{filter:none;opacity:1}
+#digbtn{background:var(--sun);color:#2a1d05}
+#digbtn[disabled]{opacity:.45;cursor:default}
+#digbtn.armed{box-shadow:0 0 0 4px rgba(242,169,59,.45);animation:pulse 1s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 9px rgba(242,169,59,0)}}
+#toast{position:absolute;left:50%;bottom:calc(28px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--panel);padding:10px 16px;border-radius:14px;font-weight:800;box-shadow:var(--shadow);max-width:min(92vw,420px);text-align:center;transition:opacity .25s;opacity:0;pointer-events:none}
+#toast.show{opacity:1}
+#joy{position:absolute;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.22);border:2px solid rgba(255,255,255,.55);pointer-events:none;transform:translate(-50%,-50%)}
+#knob{position:absolute;left:50%;top:50%;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.85);transform:translate(-50%,-50%);box-shadow:0 2px 6px rgba(0,0,0,.25)}
+@media (prefers-reduced-motion:reduce){#digbtn.armed{animation:none}}
+
+/* Cards */
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(14,26,20,.5);overflow:auto;
+  padding-block:calc(16px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.card{background:var(--panel);border-radius:22px;width:100%;max-width:540px;padding:22px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px;min-width:0;margin:auto}
+.card p{margin:0}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.title-hero{display:flex;align-items:center;gap:14px}
+.title-hero h1{font-size:clamp(34px,8vw,52px)}
+.logo{width:72px;height:72px;flex:none}
+.howto{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.howto div{background:var(--panel2);border-radius:14px;padding:10px 12px;font-size:13px}
+.howto b{display:block;font-family:var(--display);font-size:15px;margin-bottom:2px}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{text-align:left;border-radius:14px;padding:12px 14px;background:var(--panel2);border:2px solid transparent;font-weight:700}
+.opt.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 18%,var(--panel))}
+.opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 18%,var(--panel))}
+.opt[disabled]{cursor:default}
+.why{background:var(--panel2);border-radius:14px;padding:12px 14px;border-left:5px solid var(--accent)}
+.why.bad{border-left-color:var(--bad)}
+.q{font-family:var(--display);font-size:22px;font-weight:600}
+.stars{font-size:38px;letter-spacing:4px}
+.stars .off{opacity:.25;filter:grayscale(1)}
+.deliv{display:grid;grid-template-columns:1fr auto;gap:6px 14px;font-size:14px}
+.deliv b{font-variant-numeric:tabular-nums}
+.fact{background:var(--panel2);border-radius:14px;padding:12px 14px;font-size:14px}
+#grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.lv{border-radius:14px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;font-weight:800;font-size:15px;min-width:0}
+.lv small{font-size:11px;letter-spacing:1px}
+.lv.locked{opacity:.4;cursor:default}
+.lv.done{background:color-mix(in srgb,var(--accent) 22%,var(--panel2))}
+.dname{font-family:var(--display);font-size:16px;margin-top:6px;display:flex;justify-content:space-between;align-items:baseline}
+.dname small{color:var(--muted);font-family:var(--body);font-weight:700;font-size:12px}
+.scroll{max-height:min(60vh,520px);overflow:auto;padding-right:4px;display:flex;flex-direction:column;gap:6px}
+.tag{display:inline-block;padding:3px 10px;border-radius:99px;background:var(--panel2);font-size:12px;font-weight:800}
+.bigsize{font-family:var(--display);font-size:30px}
+</style>
+
+<canvas id="c"></canvas>
+
+<div id="hud" hidden>
+  <div class="pill" id="lvpill"><span class="lbl">Level</span><span id="lvno">1</span><span id="lvname"></span></div>
+  <div class="pill"><span class="lbl">Time</span><span id="time">1:30</span></div>
+  <div class="pill"><span class="lbl">Size</span><div id="sizebar"><div id="sizefill"></div></div></div>
+  <div class="pill" id="heir"><span class="lbl">Heirlooms</span><span id="heirlist"></span></div>
+  <button class="pill" id="digbtn" title="Dig a new hole (D)">⛏️ Dig <span id="digs">0</span></button>
+  <button class="pill" id="pausebtn" title="Pause (Esc)">⏸</button>
+  <button class="pill" id="mutebtn" title="Sound">🔊</button>
+</div>
+<div id="joy" hidden><div id="knob"></div></div>
+<div id="toast"></div>
+
+<div class="overlay" id="menu">
+  <div class="card">
+    <div class="title-hero">
+      <svg class="logo" viewBox="0 0 72 72" aria-hidden="true"><ellipse cx="36" cy="44" rx="30" ry="20" fill="#2a2320"/><ellipse cx="36" cy="40" rx="26" ry="16" fill="#0e0b0a"/><ellipse cx="27" cy="38" rx="6" ry="7" fill="#fff"/><ellipse cx="45" cy="38" rx="6" ry="7" fill="#fff"/><circle cx="28.5" cy="39" r="3" fill="#222"/><circle cx="46.5" cy="39" r="3" fill="#222"/><path d="M30 48q6 5 12 0" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/><text x="36" y="18" font-size="16" text-anchor="middle">📦</text></svg>
+      <div><h1>Gulp</h1><p style="font-weight:800;color:var(--muted)">The Big City Move</p></div>
+    </div>
+    <p>The whole town is moving to New Harbour City, and Gulp the friendly hole is the delivery service. Everything Gulp swallows slides down the tunnel and pops up safe in the new town. Start tiny, grow huge, and look after the town's heirlooms on the way.</p>
+    <div class="howto">
+      <div><b>Move</b>Arrow keys / WASD, or drag anywhere on the screen.</div>
+      <div><b>Swallow</b>Roll over anything smaller than you. The more you eat, the bigger you grow.</div>
+      <div><b>Heirlooms ⭐</b>Precious things need care. Answer a quick question to wrap them safely.</div>
+      <div><b>Dig ⛏️</b>Walled gardens and islands? Tap Dig, then tap where Gulp should pop up.</div>
+    </div>
+    <div class="row">
+      <button class="primary" id="playbtn">Play</button>
+      <button id="levelsbtn">Choose level</button>
+    </div>
+    <p style="font-size:12px;color:var(--muted)">40 levels across 8 districts. No one gets hurt: people step aside and wave, and every item is delivered, not destroyed.</p>
+  </div>
+</div>
+
+<div class="overlay" id="levels" hidden>
+  <div class="card">
+    <div class="row" style="justify-content:space-between;align-items:center"><h2>Choose a level</h2><button class="ghost" id="backbtn">Back</button></div>
+    <div class="scroll" id="levelscroll"></div>
+  </div>
+</div>
+
+<div class="overlay" id="card" hidden>
+  <div class="card">
+    <div class="row" style="justify-content:space-between;align-items:center"><span class="eyebrow" id="qcat">Question</span><span class="tag" id="qheir"></span></div>
+    <div class="q" id="qtext"></div>
+    <div class="opts" id="qopts"></div>
+    <div class="why" id="qwhy" hidden></div>
+    <div class="row" style="justify-content:flex-end"><button class="primary" id="qgo" hidden>Continue</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="pause" hidden>
+  <div class="card">
+    <h2>Paused</h2>
+    <p id="pausegoal"></p>
+    <div class="row"><button class="primary" id="resumebtn">Resume</button><button id="restartbtn">Restart level</button><button class="ghost" id="quitbtn">Level map</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="result" hidden>
+  <div class="card">
+    <span class="eyebrow" id="rsub"></span>
+    <h2 id="rtitle">Delivered!</h2>
+    <div class="stars" id="rstars"></div>
+    <p id="rline"></p>
+    <div class="deliv" id="rdeliv"></div>
+    <div class="fact" id="rfact"></div>
+    <div class="row"><button class="primary" id="nextbtn">Next level</button><button id="againbtn">Play again</button><button class="ghost" id="mapbtn">Level map</button></div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const clamp = (v,a,b) => v<a?a:v>b?b:v;
+const lerp = (a,b,t) => a+(b-a)*t;
+const dist = (ax,ay,bx,by) => Math.hypot(ax-bx, ay-by);
+function rng(seed){ let t=seed>>>0; return ()=>{ t+=0x6D2B79F5; let r=Math.imul(t^t>>>15,1|t); r^=r+Math.imul(r^r>>>7,61|r); return ((r^r>>>14)>>>0)/4294967296; }; }
+const pick = (r,arr) => arr[Math.floor(r()*arr.length)];
+const ri = (r,a,b) => a+Math.floor(r()*(b-a+1));
+const shuffle = (r,arr) => { const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(r()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+
+/* ---------- Districts ---------- */
+const DISTRICTS = [
+ { name:'Meadowside', ground:'#d7e6c3', pave:'#e6ebd9', road:'#8e979c', line:'#f1f3ee', park:'#a9d18e', park2:'#93c47a', water:'#7fc0da', bld:['#f3cfa6','#ecbcc6','#cbd7ee','#f6e3ae','#bfe0c9'], heir:[['🏺','Grandpa Ben\'s honey jar'],['🧭','the Meadow compass'],['🪁','the festival kite'],['🎻','Nana\'s fiddle'],['📜','the town charter']], fact:'Trees take in carbon dioxide and give out oxygen. A leafy street is cooler in summer and nicer to breathe in.' },
+ { name:'Old Town', ground:'#e5d6c1', pave:'#efe4d2', road:'#8a8783', line:'#f3efe6', park:'#b6cf8c', park2:'#9fbd76', water:'#80bdd8', bld:['#d9926b','#c76f5a','#e7b98a','#b8826a','#e3c8a0'], heir:[['🔔','the Old Town bell'],['🕰️','the clock-tower clock'],['🖼️','the mayor\'s portrait'],['⚱️','the founder\'s urn'],['🗝️','the city gate key']], fact:'Old buildings are often rebuilt or repaired instead of knocked down. Reusing a building saves a huge amount of materials and energy.' },
+ { name:'Harbour', ground:'#d9e4e3', pave:'#e8eeec', road:'#8c959b', line:'#f1f5f4', park:'#a4cf9d', park2:'#8fbf87', water:'#5ba8cf', bld:['#f0f0ea','#bcd6e6','#f3c88a','#d6e3bf','#e9b9a8'], heir:[['⚓','the harbour anchor'],['🐚','the giant shell'],['🪸','the coral lantern'],['🧜','the mermaid statue'],['🛟','the lifeboat bell']], fact:'Rubbish that falls in the harbour can drift out to sea, so a bin by the water matters more than one inland. Fish, birds and turtles all thank you.' },
+ { name:'Market Square', ground:'#f1dfc6', pave:'#f6ead8', road:'#8f8a84', line:'#f6f1e8', park:'#b4d290', park2:'#9ec27a', water:'#7fc0da', bld:['#f2a65a','#e97f6a','#f6d365','#9ecbbd','#c7a3d8'], heir:[['🧀','the prize cheese wheel'],['🥖','the baker\'s golden loaf'],['🎪','the market tent'],['⚖️','the trader\'s scales'],['🪔','the spice lamp']], fact:'Food grown near a city travels a shorter way to your plate. Shorter trips mean fresher food and less fuel used.' },
+ { name:'Science Park', ground:'#dde6ec', pave:'#eaf0f4', road:'#858f99', line:'#eef3f7', park:'#aad59a','park2':'#95c585', water:'#6fb6d8', bld:['#ffffff','#c9e2f4','#b7d5c7','#ffd9a8','#d9cff2'], heir:[['🔭','the great telescope'],['🧪','the glowing flask'],['🧲','the giant magnet'],['🛰️','the model satellite'],['🦖','the museum dinosaur']], fact:'Scientists test an idea many times before they trust it. Being wrong and trying again is a normal part of discovering things.' },
+ { name:'Snow Hill', ground:'#eef3f7', pave:'#f6f9fb', road:'#a6adb5', line:'#ffffff', park:'#dfe9f0', park2:'#cddbe6', water:'#8ec3e0', bld:['#dde4ec','#c7d3e0','#f3d6c2','#b8c7d6','#e8ced6'], heir:[['⛄','the snow mayor'],['🛷','the champion sled'],['🧣','the giant scarf'],['🏒','the golden hockey stick'],['🕯️','the winter lantern']], fact:'Snow is made of ice crystals, and no two snowflakes grow exactly the same way, because each one falls through slightly different air.' },
+ { name:'Night Lights', ground:'#2a3346', pave:'#38425a', road:'#1c2231', line:'#8a95ad', park:'#2f5a46', park2:'#27503d', water:'#1f4f70', bld:['#4a5578','#5b4f7a','#3f6475','#6b4f66','#4f6a5c'], night:true, heir:[['🏮','the lantern of light'],['🎆','the festival rocket'],['🌙','the moon sign'],['🎷','the jazz saxophone'],['🔮','the fortune globe']], fact:'Street lights that point down instead of up save energy and let us see the stars. Too much light at night is called light pollution.' },
+ { name:'Sky Gardens', ground:'#cfe8dc', pave:'#e2f0e8', road:'#7f9290', line:'#eaf4ef', park:'#9ed4a8', park2:'#86c495', water:'#7ac4d4', bld:['#f6f1e6','#cfe7d9','#f4d9b2','#bcd9e4','#e6c9d8'], heir:[['🌱','the first seedling'],['🐝','the golden beehive'],['🌻','the tallest sunflower'],['🪺','the sky nest'],['🏆','the City Cup']], fact:'Plants on rooftops soak up rain, keep buildings cooler, and give bees and birds a home high above the street.' },
+];
+
+const SMALL = ['🍃','🧻','🥤','🍬','🍂','🧃','✉️','🧦','🍎','🥨'];
+const T1 = ['📦','🪴','⚽','🧸','🎒','🛹','🪣','🎁','🥏','🧺','🎈','🪀'];
+const T2 = ['🚲','🛒','🪑','🗑️','🛵','📮','🪧','🧳','⛱️','🛴','🪆','🎨'];
+const BOATS = ['🛶','⛵','🚤','🛥️'];
+const HEIR_R = [18,22,26,30,34];
+
+/* ---------- Question bank ---------- */
+const CHOICES = [
+ ['You find a wallet on a park bench. What do you do?',['Keep it, finders keepers','Give it to a trusted adult or lost-and-found','Hide it under the bench'],1,'Someone is worried about that wallet. Handing it to a trusted adult or lost-and-found gets it home.'],
+ ['Your friend forgot their lunch. What is the kindest thing to do?',['Offer to share yours','Eat quickly so they don\'t ask','Tell everyone they forgot'],0,'Sharing costs you a little and means a lot to them.'],
+ ['A younger kid dropped their ice cream and is crying. You could...',['Laugh, it was funny','Walk past, not your problem','Ask if they\'re okay and help them find their grown-up'],2,'Checking on someone and helping them find their adult is what you would want too.'],
+ ['Your team lost the match. What do you do?',['Shake hands and say "good game"','Say the other team cheated','Refuse to play again'],0,'Being a good sport is more important than the score, and it makes the next game more fun for everyone.'],
+ ['You accidentally broke your sibling\'s toy. What next?',['Hide it and say nothing','Blame the dog','Tell them and offer to help fix it'],2,'Telling the truth right away is hard but it keeps trust, and together you might fix it.'],
+ ['A new kid sits alone at lunch. What could you do?',['Invite them to sit with you','Point and whisper','Leave them, they probably like it'],0,'Being new is scary. One invitation can change someone\'s whole week.'],
+ ['In a board game you could cheat and nobody would notice. Do you?',['Yes, winning is winning','No, play fair','Only a little'],1,'A win only counts when it is fair. You would know, even if nobody else did.'],
+ ['Two friends are saying unkind things about another kid. You...',['Join in so you fit in','Say you don\'t want to join in and change the subject','Film it'],1,'You don\'t have to argue. Not joining in and steering away is a strong, kind move. If it keeps happening, tell an adult.'],
+ ['You finish a juice box at the park and there is no bin nearby.',['Drop it in the grass','Carry it until you find a bin','Hide it in a bush'],1,'Litter doesn\'t disappear. Carrying it a little further keeps the park nice for everyone, including the animals.'],
+ ['You don\'t understand your homework. Best plan?',['Copy a friend\'s answers','Try first, then ask a teacher or parent for help','Say the dog ate it'],1,'Trying first helps you learn, and asking for help is what smart people do.'],
+ ['A friend tells you a secret: someone is hurting them. You...',['Keep the secret, you promised','Tell a trusted adult right away','Post about it online'],1,'Some secrets must be shared. If someone is being hurt, a trusted adult can help keep them safe.'],
+ ['You win a prize and your friend is sad they didn\'t. You...',['Say "I always win"','Celebrate kindly and say something encouraging to your friend','Hide the prize'],1,'You can be proud and kind at the same time.'],
+ ['Grandma gives you a gift you don\'t really like. You...',['Say "I don\'t want this"','Say thank you and give her a hug','Ask for the receipt'],1,'The gift is really her love for you. Thanking her is the honest, kind answer.'],
+ ['You are late for the bus and the crossing light is red.',['Run across, it\'s quick','Wait for green even if you miss the bus','Close your eyes and go'],1,'Being late is fixable. Being unsafe is not. Always wait for the green.'],
+ ['A stray puppy follows you home. You...',['Pick it up and take it inside','Tell an adult who can call a shelter','Feed it chocolate'],1,'A frightened animal might bite, and chocolate makes dogs ill. An adult can call people who help lost pets.'],
+ ['Two friends both want to choose the game. Best fix?',['The loudest decides','Take turns or vote','Nobody plays'],1,'Taking turns or voting is fair, and both games will get played in the end.'],
+ ['A message online from a stranger asks where you live.',['Tell them, they seem nice','Don\'t reply and show a trusted adult','Send a photo of your house'],1,'Never share your address, school or photos with strangers online. Show an adult you trust.'],
+ ['You borrowed a book and spilled juice on it.',['Return it and say nothing','Say it was like that','Apologise and offer to clean or replace it'],2,'Owning a mistake and offering to put it right is what a good friend does.'],
+ ['Your little brother wants to join your game but is too young for the rules.',['Tell him to go away','Change the rules so he can play too','Let him watch only'],1,'A small tweak to the rules means everyone gets to play. That is what makes a game fun.'],
+ ['You see a classroom plant drooping. You...',['Water it and tell the teacher','Ignore it','Pull the leaves off'],0,'Noticing and helping with small things makes a big difference to living things.'],
+ ['Someone in your class gets an answer wrong out loud. You...',['Laugh','Say "nice try" and move on','Tell everyone at break'],1,'Everyone gets things wrong. Kind classmates make it safe to try.'],
+ ['You promised to help tidy up but your show is starting.',['Sneak off to watch','Help tidy first, then watch','Say you never promised'],1,'Keeping a promise, even a small one, is how people learn they can count on you.'],
+];
+const SCIENCE = [
+ ['What do plants need to make their own food?',['Sunlight, water and air','Sugar from the shop','Only soil'],0,'Plants use sunlight, water and a gas from the air called carbon dioxide to make sugar. This is called photosynthesis.'],
+ ['Which planet is the biggest in our solar system?',['Earth','Jupiter','Mars'],1,'Jupiter is so big that more than a thousand Earths could fit inside it.'],
+ ['How many legs does an insect have?',['Six','Eight','Four'],0,'Insects have six legs. Spiders have eight, so spiders are not insects.'],
+ ['Which gas do we need to breathe in to stay alive?',['Oxygen','Helium','Carbon dioxide'],0,'Our bodies use oxygen to turn food into energy.'],
+ ['What is the largest ocean on Earth?',['Atlantic','Indian','Pacific'],2,'The Pacific Ocean is bigger than all the land on Earth put together.'],
+ ['Which of these animals is a mammal?',['Shark','Dolphin','Frog'],1,'Dolphins breathe air and feed their babies milk, just like us.'],
+ ['What makes day turn into night?',['The Sun switches off','The Earth spins around','Clouds cover the Sun'],1,'The Earth spins once a day. When your side faces away from the Sun, it is night.'],
+ ['What do bees make from flower nectar?',['Honey','Milk','Jam'],0,'Bees collect nectar and turn it into honey to store food for winter.'],
+ ['What is the hardest natural material?',['Steel','Diamond','Rock'],1,'Diamond is the hardest natural material. It is made of carbon packed very tightly.'],
+ ['About how many bones does an adult human have?',['50','206','1,000'],1,'Adults have 206 bones. Babies are born with more, and some join together as they grow.'],
+ ['Which star is closest to Earth?',['The North Star','The Sun','Sirius'],1,'The Sun is a star, just much closer than the others.'],
+ ['Which organ pumps blood around your body?',['Lungs','Brain','Heart'],2,'Your heart beats about 100,000 times a day to pump blood everywhere.'],
+ ['What is a baby frog called?',['Tadpole','Pup','Cub'],0,'Tadpoles live in water and slowly grow legs before they become frogs.'],
+ ['Which of these is a renewable source of energy?',['Coal','Wind','Oil'],1,'Wind never runs out, so energy from wind turbines is renewable.'],
+ ['How many continents are there?',['5','7','9'],1,'The seven continents are Africa, Antarctica, Asia, Australia, Europe, North America and South America.'],
+ ['What do caterpillars turn into?',['Beetles','Butterflies or moths','Bees'],1,'A caterpillar builds a chrysalis or cocoon and transforms inside it.'],
+ ['The Moon travels around the...',['Sun','Earth','Mars'],1,'The Moon orbits the Earth about once a month.'],
+ ['Sound travels fastest through...',['Air','Water','Solid things like metal'],2,'Sound is a wiggle passed between particles. Particles in solids are close together, so it passes faster.'],
+ ['What is frozen water called?',['Steam','Ice','Fog'],1,'Water freezes into ice at 0 degrees Celsius.'],
+ ['Which food group gives you the most energy for playing?',['Sweets','Whole grains like oats and bread','Nothing, just water'],1,'Whole grains release energy slowly, so you keep going longer.'],
+ ['Why do we see lightning before we hear thunder?',['Light travels faster than sound','Thunder is shy','Lightning is closer'],0,'Light reaches you almost instantly; sound takes about 3 seconds for every kilometre.'],
+ ['Which part of a plant takes in water from the soil?',['Leaves','Roots','Flowers'],1,'Roots soak up water and nutrients and hold the plant steady.'],
+];
+const RECYCLE = [
+ ['Where should an empty glass bottle go?',['Recycling bin for glass','Regular rubbish','In the river'],0,'Glass can be melted and reshaped again and again without losing quality.'],
+ ['Where does a banana peel belong?',['Compost or food waste','Plastic recycling','The road'],0,'Food scraps rot into compost, which feeds new plants.'],
+ ['What should you do with an old battery?',['Put it in the normal bin','Take it to a battery drop-off point','Throw it in the park'],1,'Batteries have chemicals inside. Special drop-off points keep them out of the soil and water.'],
+ ['Best thing to do with a big cardboard box?',['Flatten it and recycle it as paper and card','Burn it','Leave it in the street'],0,'Flattened boxes take up less space and are easy to turn into new card.'],
+ ['An old T-shirt that still fits someone else should be...',['Donated or put in a textile bank','Cut up and binned','Buried'],0,'Clothes last longer than one owner. Donating keeps them in use.'],
+ ['Why turn off the lights when you leave a room?',['Lights get tired','It saves energy','It makes the room bigger'],1,'Every bit of electricity saved means less fuel burned at the power station.'],
+ ['Healthiest and cleanest way to make a short trip across town?',['Walk or cycle','Ask for a taxi','Take a plane'],0,'Walking and cycling are good for your body and make no fumes.'],
+ ['A tap is dripping in the bathroom. You...',['Tell an adult so it can be fixed','Put a bucket under it forever','Turn it on more'],0,'A drip wastes clean water every second. A quick fix saves a lot.'],
+ ['Which of these is the best reusable choice?',['A refillable water bottle','A new plastic cup each time','Single-use straws'],0,'Refilling one bottle replaces hundreds of throw-away ones.'],
+ ['Plastic bottle, empty. What do you do first?',['Rinse it and put it in recycling','Fill it with sand','Hide it'],0,'A quick rinse keeps the recycling clean so it can actually be reused.'],
+];
+const WORDS = [
+ ['Which word is the odd one out?',['Apple','Carrot','Banana'],1,'A carrot is a vegetable. The others are fruits.'],
+ ['What is the opposite of "ancient"?',['Modern','Old','Dusty'],0,'Ancient means very old. Modern means new or of today.'],
+ ['Which word rhymes with "light"?',['Kite','Lamp','Late'],0,'Kite and light share the same ending sound.'],
+ ['What is the plural of "mouse"?',['Mouses','Mice','Meese'],1,'Mouse is an irregular word. One mouse, two mice.'],
+ ['Which of these is a verb (a doing word)?',['Run','Blue','Table'],0,'Run is something you do. Blue describes, table names a thing.'],
+ ['Which word means "very big"?',['Tiny','Enormous','Narrow'],1,'Enormous, huge, gigantic and massive all mean very big.'],
+ ['"Happy" is to "sad" as "fast" is to...',['Quick','Slow','Running'],1,'Happy and sad are opposites, so we need the opposite of fast.'],
+ ['How many syllables are in "elephant"?',['Two','Three','Four'],1,'El-e-phant. Clap it out: three claps.'],
+ ['Which of these is a compound word (two words joined)?',['Rainbow','Purple','Jumping'],0,'Rain + bow = rainbow.'],
+ ['Which word is spelled correctly?',['Freind','Friend','Frend'],1,'A trick to remember: a FRIEND is there to the END.'],
+ ['Which word means the same as "begin"?',['Finish','Start','Pause'],1,'Begin and start both mean to get going.'],
+ ['What do we call a word that describes a noun, like "fluffy"?',['Adjective','Verb','Pronoun'],0,'Adjectives describe things: a fluffy cat, a red bus.'],
+];
+const GEO = [
+ ['What is the capital city of France?',['Paris','Rome','Madrid'],0,'Paris sits on the River Seine in northern France.'],
+ ['What is the capital of Japan?',['Beijing','Tokyo','Seoul'],1,'Tokyo is one of the biggest cities in the world.'],
+ ['What is the capital of Italy?',['Venice','Milan','Rome'],2,'Rome is more than 2,500 years old.'],
+ ['Which is the tallest mountain above sea level?',['Mount Everest','Kilimanjaro','Mont Blanc'],0,'Everest stands about 8,849 metres tall in the Himalayas.'],
+ ['What is the largest hot desert?',['Gobi','Sahara','Mojave'],1,'The Sahara covers most of North Africa.'],
+ ['The capital of the United Kingdom is...',['Manchester','London','Dublin'],1,'London is on the River Thames.'],
+ ['Which continent are penguins mostly found on?',['Africa','Antarctica','Asia'],1,'Most penguins live in and around Antarctica and the cold southern oceans.'],
+ ['Which country is also a whole continent?',['Australia','Canada','Brazil'],0,'Australia is both a country and the smallest continent.'],
+ ['What is the capital of Egypt?',['Cairo','Nairobi','Lagos'],0,'Cairo is near the famous pyramids of Giza.'],
+ ['The Amazon rainforest is mostly in which country?',['Mexico','Brazil','Peru'],1,'About 60 percent of the Amazon rainforest is in Brazil.'],
+];
+
+function numOpts(r, ans, spread){
+  const s = new Set([ans]);
+  let guard=0;
+  while(s.size<3 && guard++<50){ let d=ri(r,1,spread)*(r()<0.5?-1:1); const v=ans+d; if(v>=0) s.add(v); }
+  return shuffle(r,[...s]).map(String);
+}
+function mathQ(d, r){
+  const kinds = d<=1?['add','sub','seq']: d===2?['add','sub','mul','seq']: d===3?['mul','div','add2','seq']: d===4?['mul','div','frac','add2','seq']: ['mul2','div','frac','pct','seq2'];
+  const k = pick(r,kinds); let q,a,why;
+  if(k==='add'){ const x=ri(r,3,12+d*8),y=ri(r,2,12+d*8); q=`${x} + ${y} = ?`; a=x+y; why=`${x} + ${y} = ${a}.`; }
+  else if(k==='sub'){ const y=ri(r,2,10+d*6),x=y+ri(r,1,12+d*6); q=`${x} - ${y} = ?`; a=x-y; why=`${x} - ${y} = ${a}.`; }
+  else if(k==='mul'){ const x=ri(r,2,d<3?5:9),y=ri(r,2,d<3?6:12); q=`${x} × ${y} = ?`; a=x*y; why=`${x} × ${y} = ${a}. That is ${y} added ${x} times.`; }
+  else if(k==='mul2'){ const x=ri(r,11,19),y=ri(r,3,9); q=`${x} × ${y} = ?`; a=x*y; why=`${x} × ${y}: do 10 × ${y} = ${10*y}, then ${x-10} × ${y} = ${(x-10)*y}, add them: ${a}.`; }
+  else if(k==='div'){ const y=ri(r,2,9),a0=ri(r,2,12); q=`${y*a0} ÷ ${y} = ?`; a=a0; why=`${y} × ${a0} = ${y*a0}, so ${y*a0} ÷ ${y} = ${a0}.`; }
+  else if(k==='add2'){ const x=ri(r,10,60),y=ri(r,5,40),z=ri(r,2,20); q=`${x} + ${y} - ${z} = ?`; a=x+y-z; why=`${x} + ${y} = ${x+y}, then minus ${z} is ${a}.`; }
+  else if(k==='frac'){ const dn=pick(r,[2,3,4,5]),m=ri(r,2,9),n=dn*m; const nm=dn===2?'half':dn===3?'a third':dn===4?'a quarter':'a fifth'; q=`What is ${nm} of ${n}?`; a=m; why=`${n} ÷ ${dn} = ${m}.`; }
+  else if(k==='pct'){ const p=pick(r,[10,25,50]),base=pick(r,[20,40,60,80,120,200]); q=`What is ${p}% of ${base}?`; a=base*p/100; why=`${p}% means ${p} out of 100. ${base} × ${p}/100 = ${a}.`; }
+  else if(k==='seq'){ const st=ri(r,1,9),step=ri(r,2,d+4); const s=[0,1,2,3].map(i=>st+step*i); q=`What comes next? ${s.join(', ')}, ?`; a=st+step*4; why=`Each number goes up by ${step}.`; }
+  else { const st=ri(r,1,4); const s=[0,1,2,3].map(i=>st*Math.pow(2,i)); q=`What comes next? ${s.join(', ')}, ?`; a=st*16; why=`Each number is double the one before.`; }
+  const opts=numOpts(r,a,Math.max(2,Math.round(a*0.3)+1));
+  return {cat:'Maths', q, opts, ans:opts.indexOf(String(a)), why};
+}
+function bankQ(bank, name, r, used){
+  let tries=0, idx;
+  do { idx=Math.floor(r()*bank.length); } while(used.has(name+idx) && tries++<40);
+  used.add(name+idx);
+  const [q,opts,ans,why]=bank[idx];
+  const order=shuffle(r,[0,1,2]);
+  return {cat:name, q, opts:order.map(i=>opts[i]), ans:order.indexOf(ans), why};
+}
+function makeQuestion(diff, r, used){
+  const x=r();
+  if(x<0.28) return bankQ(CHOICES,'Kind choice',r,used);
+  if(x<0.55) return mathQ(diff,r);
+  if(x<0.75) return bankQ(SCIENCE,'Science',r,used);
+  if(x<0.86) return bankQ(RECYCLE,'Green city',r,used);
+  if(x<0.94) return bankQ(WORDS,'Words',r,used);
+  return bankQ(GEO,'Our world',r,used);
+}
+
+/* ---------- Level config ---------- */
+const B=180, RW=48;
+function levelCfg(n){
+  const d=Math.floor((n-1)/5);
+  const cols=3+Math.floor((n-1)/6), rows=Math.max(3,cols-1);
+  const req=1+Math.floor((n-1)/8);
+  const enclosed=n<3?0:n<12?1:n<24?2:3;
+  return { n, d, D:DISTRICTS[d], cols, rows, time:80+n*3, targetR:Math.round(26+n*3.1), req:Math.min(req,5), enclosed:Math.min(enclosed,req), shovels:Math.min(enclosed,req)+1, diff:1+Math.floor((n-1)/8), density:1+n*0.03 };
+}
+
+/* ---------- City generation ---------- */
+function genCity(cfg){
+  const r=rng(cfg.n*7919+13);
+  const W=RW+cfg.cols*(B+RW), H=RW+cfg.rows*(B+RW);
+  const bld=[], items=[], water=[], blocks=[], heirs=[], islands=[];
+  const D=cfg.D, n=cfg.n;
+  const inRect=(x,y,R,pad=0)=>x>R.x-pad&&x<R.x+R.w+pad&&y>R.y-pad&&y<R.y+R.h+pad;
+  const free=(x,y,rad)=>{ for(const b of bld) if(inRect(x,y,b,rad)) return false; for(const w of water) if(inRect(x,y,w,rad)) return false; for(const it of items) if(dist(x,y,it.x,it.y)<rad+it.r) return false; return true; };
+  const addItem=(o)=>{ items.push(Object.assign({state:0,fall:0,angle:0},o)); return items[items.length-1]; };
+  const scatter=(R,count,maker)=>{ for(let i=0;i<count;i++){ for(let t=0;t<10;t++){ const o=maker(); const x=ri(r,R.x+o.r,R.x+R.w-o.r), y=ri(r,R.y+o.r,R.y+R.h-o.r); if(free(x,y,o.r+2)){ o.x=x;o.y=y; addItem(o); break; } } } };
+  const smallMk=()=>({r:6,kind:'litter',em:pick(r,SMALL),val:1});
+  const t1Mk=()=>({r:10,kind:'things',em:pick(r,T1),val:1});
+  const t2Mk=()=>({r:16,kind:'street',em:pick(r,T2),val:1});
+  const treeMk=(big)=>({r:big?ri(r,22,30):ri(r,12,18),kind:'tree',draw:'tree',val:1,shade:r()});
+  const addBld=(x,y,w,h,kind,color)=>{ const b={x,y,w,h,kind,color:color||pick(r,D.bld),r:Math.max(w,h)*0.5,state:0,fall:0,win:r()}; bld.push(b); return b; };
+
+  // block types
+  const types=[];
+  const total=cfg.cols*cfg.rows;
+  const harbour=cfg.d===2, sky=cfg.d===7;
+  for(let i=0;i<total;i++){
+    const w={park:2,homes:3,shops:2,plaza:1.2,tower:n>7?1.2:0,water:harbour?2.2:0,garden:sky?2:0};
+    const ks=Object.keys(w); const sum=ks.reduce((s,k)=>s+w[k],0); let x=r()*sum, ch='park';
+    for(const k of ks){ x-=w[k]; if(x<=0){ch=k;break;} }
+    types.push(ch);
+  }
+  // enclosed heirloom blocks: courtyards (or islands in harbour), not in the centre row where we start
+  const startRow=Math.floor(cfg.rows/2);
+  const candidates=shuffle(r,[...Array(total).keys()].filter(i=>Math.floor(i/cfg.cols)!==startRow));
+  for(let i=0;i<cfg.enclosed;i++) types[candidates[i]]=harbour?'island':'courtyard';
+  // plain heirlooms go to parks/plazas; make sure enough exist
+  const plain=cfg.req-cfg.enclosed;
+  const openSlots=shuffle(r,[...Array(total).keys()].filter(i=>['park','plaza','garden','shops','homes'].includes(types[i])));
+  const heirBlocks=new Set(openSlots.slice(0,plain));
+  const heirPool=shuffle(r,D.heir);
+  let heirIdx=0;
+  const mkHeir=(x,y,enclosed)=>{ const [em,name]=heirPool[heirIdx%heirPool.length]; const rad=HEIR_R[Math.min(4,Math.floor(heirIdx/2)+Math.floor(n/14))]; heirIdx++; const h=addItem({x,y,r:rad,kind:'heirloom',em,name,val:1,locked:true,enclosed,cool:0}); heirs.push(h); return h; };
+
+  for(let by=0;by<cfg.rows;by++) for(let bx=0;bx<cfg.cols;bx++){
+    const i=by*cfg.cols+bx, t=types[i];
+    const x0=RW+bx*(B+RW), y0=RW+by*(B+RW);
+    const R={x:x0,y:y0,w:B,h:B,t};
+    blocks.push(R);
+    const inner={x:x0+14,y:y0+14,w:B-28,h:B-28};
+    const cx=x0+B/2, cy=y0+B/2;
+    if(t==='park'||t==='garden'){
+      if(heirBlocks.has(i)) mkHeir(cx,cy,false);
+      scatter(inner,ri(r,4,7),()=>treeMk(r()<0.25));
+      scatter(inner,ri(r,3,6),t1Mk); scatter(inner,ri(r,5,9),smallMk); scatter(inner,ri(r,1,3),t2Mk);
+      if(t==='garden'){ addBld(x0+8,y0+8,54,54,'kiosk'); addBld(x0+B-62,y0+B-62,54,54,'kiosk'); }
+    } else if(t==='homes'){
+      const hs=[[x0+12,y0+12],[x0+B-12-70,y0+12],[x0+12,y0+B-12-62],[x0+B-12-70,y0+B-12-62]];
+      for(const [hx,hy] of hs) if(r()<0.9) addBld(hx,hy,70,62,'house');
+      if(heirBlocks.has(i)) mkHeir(cx,cy,false);
+      scatter({x:x0+84,y:y0+10,w:B-168,h:B-20},ri(r,2,4),t1Mk);
+      scatter({x:x0+10,y:y0+76,w:B-20,h:30},ri(r,3,5),t1Mk);
+      scatter(inner,ri(r,4,7),smallMk); scatter(inner,ri(r,1,3),t2Mk);
+      if(r()<0.5) scatter(inner,1,()=>treeMk(false));
+    } else if(t==='shops'){
+      addBld(x0+10,y0+10,B-20,66,'shop');
+      if(r()<0.7) addBld(x0+10,y0+B-10-60,ri(r,70,100),60,'shop');
+      if(heirBlocks.has(i)) mkHeir(cx+40,cy+8,false);
+      scatter({x:x0+10,y:y0+80,w:B-20,h:B-150},ri(r,3,6),t2Mk);
+      scatter(inner,ri(r,5,8),smallMk); scatter(inner,ri(r,2,4),t1Mk);
+    } else if(t==='plaza'){
+      if(heirBlocks.has(i)) mkHeir(cx,cy,false); else addItem({x:cx,y:cy,r:24,kind:'street',draw:'fountain',val:1});
+      scatter(inner,ri(r,4,6),t2Mk); scatter(inner,ri(r,4,7),t1Mk); scatter(inner,ri(r,6,10),smallMk);
+      scatter(inner,ri(r,0,2),()=>treeMk(false));
+    } else if(t==='tower'){
+      const s=B-60; addBld(cx-s/2,cy-s/2,s,s,'tower');
+      scatter({x:x0+6,y:y0+6,w:B-12,h:22},ri(r,2,4),t1Mk); scatter({x:x0+6,y:y0+B-28,w:B-12,h:22},ri(r,2,4),t1Mk);
+      scatter(inner,ri(r,3,5),smallMk);
+    } else if(t==='courtyard'){
+      const wall=34, c=D.bld[ri(r,0,D.bld.length-1)];
+      addBld(x0+8,y0+8,B-16,wall,'wall',c); addBld(x0+8,y0+B-8-wall,B-16,wall,'wall',c);
+      addBld(x0+8,y0+8+wall,wall,B-16-2*wall,'wall',c); addBld(x0+B-8-wall,y0+8+wall,wall,B-16-2*wall,'wall',c);
+      mkHeir(cx,cy,true);
+      const court={x:x0+8+wall+6,y:y0+8+wall+6,w:B-16-2*wall-12,h:B-16-2*wall-12};
+      scatter(court,ri(r,3,5),()=>({r:10,kind:'things',em:pick(r,['💎','🎁','🪙','📦']),val:2}));
+      scatter(court,ri(r,2,4),smallMk);
+    } else if(t==='water'||t==='island'){
+      water.push({x:x0-RW/2,y:y0-RW/2,w:B+RW,h:B+RW});
+      for(let k=0;k<ri(r,3,5);k++){ const side=ri(r,0,3); let x,y; if(side===0){x=ri(r,x0,x0+B);y=y0-RW/2+ri(r,10,34);} else if(side===1){x=ri(r,x0,x0+B);y=y0+B+RW/2-ri(r,10,34);} else if(side===2){x=x0-RW/2+ri(r,10,34);y=ri(r,y0,y0+B);} else {x=x0+B+RW/2-ri(r,10,34);y=ri(r,y0,y0+B);} addItem({x,y,r:ri(r,12,20),kind:'boat',em:pick(r,BOATS),val:1,onWater:true}); }
+      if(t==='island'){ islands.push({x:cx,y:cy,r:42}); mkHeir(cx,cy,true); for(let k=0;k<2;k++) addItem({x:cx+ri(r,-26,26),y:cy+ri(r,-26,26),r:8,kind:'things',em:pick(r,['🐚','🥥','⭐']),val:2}); }
+    }
+  }
+  // roads: parked cars, cones, litter
+  const carColors=['#e8605a','#4b8fe2','#f0b429','#6cc08b','#f3f3f3','#9b7bd6','#ff8c69'];
+  for(let by=0;by<=cfg.rows;by++){ const y=RW/2+by*(B+RW); for(let x=RW+20;x<W-RW;x+=ri(r,70,130)){ if(r()<0.55*cfg.density){ const kind=r()<0.15&&n>4?'bus':'car'; const o={x,y:y+pick(r,[-14,14]),r:kind==='bus'?38:22,kind:'vehicle',draw:kind,val:1,color:pick(r,carColors),angle:0}; if(free(o.x,o.y,o.r)) addItem(o); } } }
+  for(let bx=0;bx<=cfg.cols;bx++){ const x=RW/2+bx*(B+RW); for(let y=RW+20;y<H-RW;y+=ri(r,70,130)){ if(r()<0.55*cfg.density){ const kind=r()<0.15&&n>4?'bus':'car'; const o={x:x+pick(r,[-14,14]),y,r:kind==='bus'?38:22,kind:'vehicle',draw:kind,val:1,color:pick(r,carColors),angle:Math.PI/2}; if(free(o.x,o.y,o.r)) addItem(o); } } }
+  for(let k=0;k<Math.round(20*cfg.density);k++){ const horiz=r()<0.5; const o=r()<0.5?smallMk():{r:9,kind:'street',em:'🚧',val:1}; let x,y; if(horiz){ y=RW/2+ri(r,0,cfg.rows)*(B+RW)+ri(r,-12,12); x=ri(r,10,W-10);} else { x=RW/2+ri(r,0,cfg.cols)*(B+RW)+ri(r,-12,12); y=ri(r,10,H-10);} if(free(x,y,o.r+2)){ o.x=x;o.y=y; addItem(o);} }
+  // shovel pickups on open ground
+  const shovelsOnMap = n>5 ? ri(r,1,2) : 0;
+  for(let k=0;k<shovelsOnMap;k++){ for(let t=0;t<30;t++){ const x=ri(r,20,W-20),y=ri(r,20,H-20); if(free(x,y,14)){ addItem({x,y,r:11,kind:'shovel',em:'⛏️',val:0}); break; } } }
+  // start on the centre road, clear a patch
+  const sx=W/2, sy=RW/2+startRow*(B+RW);
+  for(let i=items.length-1;i>=0;i--) if(dist(items[i].x,items[i].y,sx,sy)<70 && items[i].kind!=='heirloom') items.splice(i,1);
+  return {W,H,bld,items,water,blocks,heirs,islands,sx,sy};
+}
+
+/* ---------- Audio ---------- */
+let AC=null, muted=false;
+try{ muted = localStorage.getItem('gulp.muted')==='1'; }catch(e){}
+function beep(freq, dur=0.08, type='sine', vol=0.08){
+  if(muted) return;
+  try{ AC=AC||new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==='suspended') AC.resume();
+    const o=AC.createOscillator(), g=AC.createGain(); o.type=type; o.frequency.setValueAtTime(freq,AC.currentTime); o.frequency.exponentialRampToValueAtTime(freq*0.6,AC.currentTime+dur);
+    g.gain.setValueAtTime(vol,AC.currentTime); g.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+dur);
+    o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime+dur); }catch(e){}
+}
+const sfx={ gulp:(r)=>beep(clamp(600-r*4,120,600),0.12,'triangle',0.1), big:()=>{beep(180,0.25,'sawtooth',0.07);}, good:()=>{beep(660,0.1);setTimeout(()=>beep(880,0.15),100);setTimeout(()=>beep(1320,0.2),200);}, bad:()=>beep(220,0.25,'triangle',0.05), dig:()=>{beep(300,0.15,'square',0.04);setTimeout(()=>beep(500,0.15,'square',0.04),150);}, win:()=>{[523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,0.25),i*120));} };
+
+/* ---------- Progress ---------- */
+let progress={unlocked:1,stars:{}};
+try{ const s=localStorage.getItem('gulp.progress'); if(s) progress=Object.assign(progress,JSON.parse(s)); }catch(e){}
+function saveProgress(){ try{ localStorage.setItem('gulp.progress',JSON.stringify(progress)); }catch(e){} }
+
+/* ---------- Game state ---------- */
+const cv=$('#c'), ctx=cv.getContext('2d');
+let vw=0,vh=0,dpr=1;
+function resize(){ dpr=Math.min(2,window.devicePixelRatio||1); vw=cv.clientWidth; vh=cv.clientHeight; cv.width=vw*dpr; cv.height=vh*dpr; }
+window.addEventListener('resize',resize); resize();
+
+let G=null; // current level game object
+let state='menu'; // menu | levels | play | card | pause | result
+const keys={};
+const joy={active:false,id:null,ox:0,oy:0,dx:0,dy:0};
+let cam={x:0,y:0,s:1};
+let toastT=0;
+function toast(msg,ms=2200){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),ms); }
+
+function startLevel(n){
+  const cfg=levelCfg(n); const city=genCity(cfg);
+  G={cfg,...city, hole:{x:city.sx,y:city.sy,r:14,vx:0,vy:0}, time:cfg.time, shovels:cfg.shovels, got:0, swallowed:{}, count:0, totalItems:city.items.length, digMode:false, digAnim:0, digTo:null, particles:[], floats:[], qr:rng(n*31+7), used:new Set(), won:false, hintShown:false, t:0};
+  cam={x:city.sx,y:city.sy,s:zoomFor(14)};
+  state='play';
+  showOnly(null); $('#hud').hidden=false;
+  $('#lvno').textContent=n; $('#lvname').textContent=cfg.D.name;
+  $('#pausegoal').textContent=`Goal: grow to size ${cfg.targetR} and deliver ${cfg.req} heirloom${cfg.req>1?'s':''} before time runs out.`;
+  renderHeirHud(); updateHud();
+  toast(`${cfg.D.name}: grow to ${cfg.targetR} and deliver ${cfg.req} heirloom${cfg.req>1?'s':''}!`,3200);
+}
+function zoomFor(r){ const base=Math.pow(18/r,0.6)*1.1; const fit=clamp(Math.min(vw,vh)/640,0.62,1); return clamp(base*fit,0.2,1.35); }
+function showOnly(id){ for(const o of ['menu','levels','card','pause','result']) $('#'+o).hidden=(o!==id); }
+function renderHeirHud(){ $('#heirlist').innerHTML=G.heirs.map(h=>`<span data-h="${h.name}">${h.em}</span>`).join(''); }
+function updateHud(){
+  const h=G.hole; $('#time').textContent=fmt(G.time);
+  $('#sizefill').style.width=clamp(h.r/G.cfg.targetR*100,0,100)+'%';
+  $('#digs').textContent=G.shovels; $('#digbtn').disabled=G.shovels<=0;
+  const spans=$('#heirlist').children; G.heirs.forEach((hh,i)=>{ if(spans[i]) spans[i].classList.toggle('got',hh.state===2); });
+}
+const fmt=s=>{ s=Math.max(0,Math.ceil(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
+
+/* ---------- Input ---------- */
+window.addEventListener('keydown',e=>{
+  keys[e.key.toLowerCase()]=true;
+  if(e.key==='Escape'){ if(state==='play'){ if(G.digMode) setDig(false); else pauseGame(); } else if(state==='pause') resumeGame(); }
+  if((e.key==='d'||e.key==='D')&&state==='play'&&!e.repeat) setDig(!G.digMode);
+  if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase())) e.preventDefault();
+});
+window.addEventListener('keyup',e=>{ keys[e.key.toLowerCase()]=false; });
+cv.addEventListener('pointerdown',e=>{
+  if(state!=='play') return;
+  if(G.digMode){ const wx=(e.clientX-vw/2)/cam.s+cam.x, wy=(e.clientY-vh/2)/cam.s+cam.y; tryDig(wx,wy); return; }
+  joy.active=true; joy.id=e.pointerId; joy.ox=e.clientX; joy.oy=e.clientY; joy.dx=0; joy.dy=0;
+  const j=$('#joy'); j.hidden=false; j.style.left=e.clientX+'px'; j.style.top=e.clientY+'px'; $('#knob').style.transform='translate(-50%,-50%)';
+  cv.setPointerCapture(e.pointerId);
+});
+cv.addEventListener('pointermove',e=>{
+  if(!joy.active||e.pointerId!==joy.id) return;
+  let dx=e.clientX-joy.ox, dy=e.clientY-joy.oy; const m=Math.hypot(dx,dy); const max=44; if(m>max){dx=dx/m*max;dy=dy/m*max;}
+  joy.dx=dx/max; joy.dy=dy/max; $('#knob').style.transform=`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px))`;
+});
+const endJoy=e=>{ if(e&&joy.id!==e.pointerId) return; joy.active=false; joy.dx=joy.dy=0; $('#joy').hidden=true; };
+cv.addEventListener('pointerup',endJoy); cv.addEventListener('pointercancel',endJoy);
+
+function setDig(on){ if(on&&G.shovels<=0){ toast('No shovels left. Look for ⛏️ on the map!'); return; } G.digMode=on; $('#digbtn').classList.toggle('armed',on); if(on) toast('Tap where Gulp should pop up. Esc to cancel.',4000); }
+function tryDig(wx,wy){
+  if(wx<20||wy<20||wx>G.W-20||wy>G.H-20){ toast('That is outside the town.'); return; }
+  for(const b of G.bld) if(b.state===0 && wx>b.x-6&&wx<b.x+b.w+6&&wy>b.y-6&&wy<b.y+b.h+6){ toast('Gulp can\'t pop up inside a building. Try next to it.'); return; }
+  if(onWater(wx,wy)){ toast('Not in the water! Aim for land or an island.'); return; }
+  G.shovels--; setDig(false); G.digAnim=1; G.digTo={x:wx,y:wy}; sfx.dig(); updateHud();
+}
+function onWater(x,y){ for(const w of G.water) if(x>w.x&&x<w.x+w.w&&y>w.y&&y<w.y+w.h){ for(const is of G.islands) if(dist(x,y,is.x,is.y)<is.r) return false; return true; } return false; }
+
+$('#digbtn').addEventListener('click',()=>{ if(state==='play') setDig(!G.digMode); });
+$('#pausebtn').addEventListener('click',()=>{ if(state==='play') pauseGame(); });
+$('#mutebtn').addEventListener('click',()=>{ muted=!muted; $('#mutebtn').textContent=muted?'🔇':'🔊'; try{localStorage.setItem('gulp.muted',muted?'1':'0');}catch(e){} });
+$('#mutebtn').textContent=muted?'🔇':'🔊';
+function pauseGame(){ state='pause'; endJoy(); showOnly('pause'); }
+function resumeGame(){ state='play'; showOnly(null); }
+$('#resumebtn').addEventListener('click',resumeGame);
+$('#restartbtn').addEventListener('click',()=>startLevel(G.cfg.n));
+$('#quitbtn').addEventListener('click',()=>openLevels());
+$('#playbtn').addEventListener('click',()=>startLevel(Math.min(40,progress.unlocked)));
+$('#levelsbtn').addEventListener('click',openLevels);
+$('#backbtn').addEventListener('click',()=>{ state='menu'; showOnly('menu'); });
+$('#mapbtn').addEventListener('click',openLevels);
+$('#againbtn').addEventListener('click',()=>startLevel(G.cfg.n));
+$('#nextbtn').addEventListener('click',()=>{ if(G.cfg.n<40) startLevel(G.cfg.n+1); else openLevels(); });
+
+function openLevels(){
+  state='levels'; $('#hud').hidden=true; endJoy(); showOnly('levels');
+  const wrap=$('#levelscroll'); wrap.innerHTML='';
+  DISTRICTS.forEach((d,di)=>{
+    const head=document.createElement('div'); head.className='dname'; head.innerHTML=`<span>${d.name}</span><small>Levels ${di*5+1} to ${di*5+5}</small>`; wrap.appendChild(head);
+    const grid=document.createElement('div'); grid.id=''; grid.className='row'; grid.style.display='grid'; grid.style.gridTemplateColumns='repeat(5,1fr)'; grid.style.gap='8px';
+    for(let k=1;k<=5;k++){ const n=di*5+k; const st=progress.stars[n]||0; const b=document.createElement('button'); b.className='lv'+(n>progress.unlocked?' locked':'')+(st?' done':''); b.innerHTML=`${n}<small>${'★'.repeat(st)}${'☆'.repeat(3-st)}</small>`; b.disabled=n>progress.unlocked; b.addEventListener('click',()=>startLevel(n)); grid.appendChild(b); }
+    wrap.appendChild(grid);
+  });
+}
+
+/* ---------- Challenge card ---------- */
+let currentQ=null, qHeir=null;
+function openCard(h){
+  state='card'; endJoy(); qHeir=h; currentQ=makeQuestion(G.cfg.diff,G.qr,G.used);
+  $('#qcat').textContent=currentQ.cat; $('#qheir').textContent=`${h.em} ${h.name}`; $('#qtext').textContent=currentQ.q;
+  const o=$('#qopts'); o.innerHTML=''; $('#qwhy').hidden=true; $('#qgo').hidden=true;
+  currentQ.opts.forEach((t,i)=>{ const b=document.createElement('button'); b.className='opt'; b.textContent=t; b.addEventListener('click',()=>answer(i)); o.appendChild(b); });
+  showOnly('card');
+}
+function answer(i){
+  const btns=[...$('#qopts').children]; btns.forEach(b=>b.disabled=true);
+  const ok=i===currentQ.ans; btns[currentQ.ans].classList.add('right'); if(!ok) btns[i].classList.add('wrong');
+  const w=$('#qwhy'); w.hidden=false; w.classList.toggle('bad',!ok);
+  w.textContent=(ok?'Wrapped and ready! ':'Not quite. ')+currentQ.why+(ok?'':' Gulp will try again in a moment.');
+  $('#qgo').hidden=false; $('#qgo').onclick=()=>{ showOnly(null); state='play'; if(ok){ qHeir.locked=false; qHeir.unlockedAt=G.t; } else { qHeir.cool=5; } };
+  if(ok) sfx.good(); else sfx.bad();
+}
+
+/* ---------- Update ---------- */
+function update(dt){
+  const h=G.hole, cfg=G.cfg; G.t+=dt;
+  if(G.digAnim>0){
+    G.digAnim-=dt*2;
+    if(G.digTo && G.digAnim<=0.5){ h.x=G.digTo.x; h.y=G.digTo.y; G.digTo=null; cam.x=h.x; cam.y=h.y; }
+    if(G.digAnim<=0) G.digAnim=0;
+  } else {
+    let ix=0,iy=0;
+    if(keys['arrowleft']||keys['a']) ix-=1; if(keys['arrowright']||keys['d']) ix+=1; if(keys['arrowup']||keys['w']) iy-=1; if(keys['arrowdown']||keys['s']) iy+=1;
+    if(ix||iy){ const m=Math.hypot(ix,iy); ix/=m; iy/=m; }
+    if(joy.active){ ix=joy.dx; iy=joy.dy; }
+    const speed=clamp(165+h.r*0.55,165,250);
+    h.vx=lerp(h.vx,ix*speed,1-Math.pow(0.0005,dt)); h.vy=lerp(h.vy,iy*speed,1-Math.pow(0.0005,dt));
+    const ox=h.x, oy=h.y;
+    h.x+=h.vx*dt; h.y+=h.vy*dt;
+    h.x=clamp(h.x,h.r*0.3,G.W-h.r*0.3); h.y=clamp(h.y,h.r*0.3,G.H-h.r*0.3);
+    if(onWater(h.x,h.y)){ if(!onWater(h.x,oy)) h.y=oy; else if(!onWater(ox,h.y)) h.x=ox; else { h.x=ox; h.y=oy; } }
+    for(const b of G.bld){ if(b.state!==0) continue; if(b.r<=h.r*0.85) continue; // small enough to swallow: walk over it
+      const cxp=clamp(h.x,b.x,b.x+b.w), cyp=clamp(h.y,b.y,b.y+b.h); const d=dist(h.x,h.y,cxp,cyp); const rr=h.r*0.55;
+      if(d<rr){ if(d<0.001){ h.x=ox; h.y=oy; } else { h.x+=(h.x-cxp)/d*(rr-d); h.y+=(h.y-cyp)/d*(rr-d); } }
+    }
+  }
+  // timer
+  G.time-=dt; if(G.time<=0){ G.time=0; finish(false); return; }
+  // items
+  for(const it of G.items){
+    if(it.state===2) continue;
+    if(it.state===1){ it.fall+=dt*2.6; if(it.fall>=1){ it.state=2; grow(it); } continue; }
+    if(it.kind==='heirloom'&&it.cool>0) it.cool-=dt;
+    if(it.r>h.r*0.85) continue;
+    const d=dist(it.x,it.y,h.x,h.y);
+    if(d<h.r*0.9){
+      if(it.kind==='heirloom'&&it.locked){ if(it.cool<=0&&G.digAnim===0){ openCard(it); return; } continue; }
+      it.state=1; it.fall=0; it.fx=it.x; it.fy=it.y;
+      if(it.kind==='shovel'){ G.shovels++; it.state=2; toast('+1 shovel ⛏️',1200); sfx.good(); updateHud(); continue; }
+      sfx.gulp(it.r);
+    }
+  }
+  for(const b of G.bld){
+    if(b.state===2) continue;
+    if(b.state===1){ b.fall+=dt*1.8; if(b.fall>=1){ b.state=2; grow(b,true);} continue; }
+    if(b.r>h.r*0.85) continue;
+    const bx=b.x+b.w/2, by=b.y+b.h/2;
+    if(dist(bx,by,h.x,h.y)<h.r*0.8){ b.state=1; b.fall=0; sfx.big(); }
+  }
+  // particles
+  for(const p of G.particles){ p.t-=dt; p.x+=p.vx*dt; p.y+=p.vy*dt; }
+  G.particles=G.particles.filter(p=>p.t>0);
+  for(const f of G.floats){ f.t-=dt; f.y-=30*dt; }
+  G.floats=G.floats.filter(f=>f.t>0);
+  // camera
+  const tz=zoomFor(h.r); cam.s=lerp(cam.s,tz,1-Math.pow(0.02,dt));
+  cam.x=lerp(cam.x,h.x,1-Math.pow(0.001,dt)); cam.y=lerp(cam.y,h.y,1-Math.pow(0.001,dt));
+  // hints
+  if(!G.hintShown && G.t>25 && cfg.enclosed>0 && G.shovels>0){ G.hintShown=true; toast('Tip: heirlooms behind walls or on islands need a Dig ⛏️',3500); }
+  // win
+  if(!G.won && h.r>=cfg.targetR && G.got>=cfg.req) finish(true);
+  updateHud();
+}
+function grow(it,isBld){
+  const h=G.hole; const k=it.kind==='heirloom'?1.0:isBld?0.45:0.36;
+  const before=h.r; h.r=Math.sqrt(h.r*h.r+k*it.r*it.r*(it.val||1));
+  G.count++; const kind=isBld?'building':it.kind; G.swallowed[kind]=(G.swallowed[kind]||0)+1;
+  if(it.kind==='heirloom'){ it.state=2; G.got++; toast(`${it.em} ${it.name} delivered safely!`,2600); G.floats.push({x:h.x,y:h.y-h.r,text:'Heirloom!',t:1.6}); }
+  for(let i=0;i<6;i++){ const a=Math.random()*Math.PI*2; G.particles.push({x:h.x+Math.cos(a)*h.r,y:h.y+Math.sin(a)*h.r,vx:Math.cos(a)*40,vy:Math.sin(a)*40-20,t:0.5}); }
+  if(Math.floor(before/10)!==Math.floor(h.r/10)) G.floats.push({x:h.x,y:h.y-h.r-10,text:'Bigger!',t:1.2});
+}
+function finish(win){
+  G.won=win; state='result'; endJoy(); $('#hud').hidden=true;
+  const cfg=G.cfg, n=cfg.n;
+  const pct=G.count/Math.max(1,G.totalItems+G.bld.length);
+  const timeLeft=G.time/cfg.time;
+  let stars=win?1:0; if(win&&(pct>=0.45||timeLeft>0.35)) stars=2; if(win&&(pct>=0.7||(pct>=0.45&&timeLeft>0.35))) stars=3;
+  if(win){ progress.stars[n]=Math.max(progress.stars[n]||0,stars); progress.unlocked=Math.max(progress.unlocked,Math.min(40,n+1)); saveProgress(); sfx.win(); }
+  $('#rsub').textContent=`Level ${n} · ${cfg.D.name}`;
+  $('#rtitle').textContent=win?(n===40?'The whole town has moved!':'Delivered!'):'Time\'s up!';
+  $('#rstars').innerHTML=[1,2,3].map(i=>`<span class="${i<=stars?'':'off'}">★</span>`).join('');
+  $('#rline').textContent=win?`Gulp grew to size ${Math.round(G.hole.r)} and carried ${G.count} things through the tunnel to New Harbour City.`:`Gulp reached size ${Math.round(G.hole.r)} of ${cfg.targetR} and delivered ${G.got} of ${cfg.req} heirlooms. Nothing is lost. Have another go!`;
+  const labels={litter:'Litter, sorted and recycled',things:'Boxes, toys and plants',street:'Street furniture and bikes',vehicle:'Parked cars and buses',tree:'Trees, replanted',boat:'Boats, floated to the new harbour',building:'Buildings, rebuilt brick by brick',heirloom:'Heirlooms, wrapped with care'};
+  const d=$('#rdeliv'); d.innerHTML=Object.entries(G.swallowed).map(([k,v])=>`<span>${labels[k]||k}</span><b>${v}</b>`).join('')||'<span>Nothing delivered yet</span><b>0</b>';
+  $('#rfact').textContent='Did you know? '+cfg.D.fact;
+  $('#nextbtn').hidden=!win; $('#nextbtn').textContent=n===40?'Back to the map':'Next level';
+  showOnly('result');
+}
+
+/* ---------- Render ---------- */
+const EMOJI_FONT='"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji","Twemoji Mozilla",sans-serif';
+function rr(x,y,w,h,r){ ctx.beginPath(); ctx.roundRect(x,y,w,h,r); }
+function render(){
+  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,vw,vh);
+  const D=G?G.cfg.D:DISTRICTS[0];
+  ctx.fillStyle=D.ground; ctx.fillRect(0,0,vw,vh);
+  if(!G) return;
+  const h=G.hole, s=cam.s;
+  ctx.save(); ctx.translate(vw/2,vh/2); ctx.scale(s,s); ctx.translate(-cam.x,-cam.y);
+  const left=cam.x-vw/2/s-80, right=cam.x+vw/2/s+80, top=cam.y-vh/2/s-80, bottom=cam.y+vh/2/s+80;
+  const vis=(x,y,r)=>x+r>left&&x-r<right&&y+r>top&&y-r<bottom;
+  // roads
+  ctx.fillStyle=D.road; ctx.fillRect(0,0,G.W,G.H);
+  // blocks
+  for(const bk of G.blocks){ if(!vis(bk.x+B/2,bk.y+B/2,B)) continue; if(bk.t==='water'||bk.t==='island') continue; ctx.fillStyle=D.pave; rr(bk.x,bk.y,bk.w,bk.h,10); ctx.fill(); if(bk.t==='park'||bk.t==='garden'){ ctx.fillStyle=D.park; rr(bk.x+10,bk.y+10,bk.w-20,bk.h-20,16); ctx.fill(); ctx.fillStyle=D.park2; ctx.beginPath(); ctx.ellipse(bk.x+B*0.6,bk.y+B*0.55,46,30,0.4,0,7); ctx.fill(); } if(bk.t==='plaza'){ ctx.fillStyle=D.park; ctx.beginPath(); ctx.arc(bk.x+B/2,bk.y+B/2,52,0,7); ctx.fill(); } }
+  // road lines
+  ctx.strokeStyle=D.line; ctx.lineWidth=3; ctx.setLineDash([18,18]); ctx.beginPath();
+  for(let by=0;by<=G.cfg.rows;by++){ const y=RW/2+by*(B+RW); ctx.moveTo(0,y); ctx.lineTo(G.W,y); }
+  for(let bx=0;bx<=G.cfg.cols;bx++){ const x=RW/2+bx*(B+RW); ctx.moveTo(x,0); ctx.lineTo(x,G.H); }
+  ctx.stroke(); ctx.setLineDash([]);
+  // water
+  for(const w of G.water){ if(!vis(w.x+w.w/2,w.y+w.h/2,w.w)) continue; ctx.fillStyle=D.water; rr(w.x,w.y,w.w,w.h,14); ctx.fill(); ctx.strokeStyle='rgba(255,255,255,.35)'; ctx.lineWidth=2; for(let k=0;k<4;k++){ ctx.beginPath(); const yy=w.y+30+k*45+Math.sin(G.t*2+k)*4; ctx.moveTo(w.x+20,yy); ctx.quadraticCurveTo(w.x+w.w/2,yy+8,w.x+w.w-20,yy); ctx.stroke(); } }
+  for(const is of G.islands){ ctx.fillStyle='#e9d9a7'; ctx.beginPath(); ctx.arc(is.x,is.y,is.r,0,7); ctx.fill(); ctx.fillStyle=D.park2; ctx.beginPath(); ctx.arc(is.x-6,is.y-4,is.r*0.55,0,7); ctx.fill(); }
+  // hole (under everything standing)
+  drawHole(h);
+  // items & buildings: standing first, falling drawn clipped into the hole
+  const falling=[];
+  for(const it of G.items){ if(it.state===2||!vis(it.x,it.y,it.r*2)) continue; if(it.state===1){falling.push(it);continue;} drawItem(it,1,D); }
+  for(const b of G.bld){ if(b.state===2||!vis(b.x+b.w/2,b.y+b.h/2,b.r*2)) continue; if(b.state===1){falling.push(b);continue;} drawBld(b,1,D); }
+  if(falling.length){ ctx.save(); ctx.beginPath(); ctx.ellipse(h.x,h.y,h.r,h.r*0.78,0,0,7); ctx.clip(); for(const f of falling){ const k=1-f.fall; const sc=0.15+0.85*k*k; if(f.w!==undefined){ ctx.save(); const cx=f.x+f.w/2,cy=f.y+f.h/2; const tx=lerp(cx,h.x,1-k*k),ty=lerp(cy,h.y,1-k*k); ctx.translate(tx,ty); ctx.scale(sc,sc); ctx.rotate(f.fall*1.2); ctx.translate(-cx,-cy); drawBld(f,k,D); ctx.restore(); } else { const tx=lerp(f.fx,h.x,1-k*k),ty=lerp(f.fy,h.y,1-k*k); ctx.save(); ctx.translate(tx,ty); ctx.scale(sc,sc); ctx.rotate(f.fall*2); ctx.translate(-tx,-ty); drawItem({...f,x:tx,y:ty},k,D); ctx.restore(); } } ctx.restore(); }
+  // particles & floats
+  ctx.fillStyle='rgba(255,255,255,.8)'; for(const p of G.particles){ ctx.beginPath(); ctx.arc(p.x,p.y,3*p.t*2,0,7); ctx.fill(); }
+  for(const f of G.floats){ ctx.globalAlpha=clamp(f.t,0,1); ctx.font=`700 ${22/ s}px Fredoka, sans-serif`; ctx.textAlign='center'; ctx.fillStyle='#fff'; ctx.strokeStyle='rgba(0,0,0,.4)'; ctx.lineWidth=4/s; ctx.strokeText(f.text,f.x,f.y); ctx.fillText(f.text,f.x,f.y); ctx.globalAlpha=1; }
+  // dig target hint
+  if(G.digMode){ ctx.strokeStyle='rgba(255,255,255,.6)'; ctx.lineWidth=2/s; ctx.setLineDash([8/s,8/s]); ctx.beginPath(); ctx.arc(h.x,h.y,h.r*1.4,0,7); ctx.stroke(); ctx.setLineDash([]); }
+  ctx.restore();
+  if(D.night){ ctx.fillStyle='rgba(10,14,30,.18)'; ctx.fillRect(0,0,vw,vh); }
+  if(G.digMode){ ctx.fillStyle='rgba(255,180,60,.12)'; ctx.fillRect(0,0,vw,vh); }
+}
+function drawHole(h){
+  let sc=1; if(G.digAnim>0) sc=G.digAnim>0.5?(G.digAnim-0.5)*2:(0.5-G.digAnim)*2; sc=Math.max(0.02,sc);
+  const r=h.r*sc, ry=r*0.78;
+  ctx.save(); ctx.translate(h.x,h.y);
+  const g=ctx.createRadialGradient(0,0,r*0.2,0,0,r); g.addColorStop(0,'#0b0908'); g.addColorStop(0.75,'#1f1915'); g.addColorStop(1,'#3b312b');
+  ctx.fillStyle='rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(0,ry*0.1,r*1.06,ry*1.08,0,0,7); ctx.fill();
+  ctx.fillStyle=g; ctx.beginPath(); ctx.ellipse(0,0,r,ry,0,0,7); ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.18)'; ctx.lineWidth=Math.max(1.5,r*0.06); ctx.beginPath(); ctx.ellipse(0,0,r*0.98,ry*0.98,0,Math.PI*1.05,Math.PI*1.95); ctx.stroke();
+  // eyes
+  const er=Math.max(2.5,r*0.17), ex=r*0.32, ey=-ry*0.18; const look=clamp(h.vx/250,-1,1)*er*0.35, looky=clamp(h.vy/250,-1,1)*er*0.35;
+  for(const sgn of [-1,1]){ ctx.fillStyle='#fff'; ctx.beginPath(); ctx.ellipse(sgn*ex,ey,er,er*1.15,0,0,7); ctx.fill(); ctx.fillStyle='#1a1a1a'; ctx.beginPath(); ctx.arc(sgn*ex+look,ey+looky,er*0.5,0,7); ctx.fill(); ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(sgn*ex+look-er*0.15,ey+looky-er*0.2,er*0.15,0,7); ctx.fill(); }
+  ctx.strokeStyle='rgba(255,255,255,.9)'; ctx.lineWidth=Math.max(1.5,r*0.05); ctx.lineCap='round'; ctx.beginPath(); ctx.arc(0,ry*0.15,r*0.22,0.2,Math.PI-0.2); ctx.stroke();
+  ctx.restore();
+}
+function drawItem(it,alpha,D){
+  ctx.globalAlpha=alpha;
+  if(it.draw==='tree'){ ctx.fillStyle='rgba(0,0,0,.18)'; ctx.beginPath(); ctx.ellipse(it.x+4,it.y+5,it.r,it.r*0.8,0,0,7); ctx.fill(); ctx.fillStyle=it.shade<0.5?'#5aa565':'#3f8f55'; ctx.beginPath(); ctx.arc(it.x,it.y,it.r,0,7); ctx.fill(); ctx.fillStyle='rgba(255,255,255,.25)'; ctx.beginPath(); ctx.arc(it.x-it.r*0.3,it.y-it.r*0.3,it.r*0.45,0,7); ctx.fill(); if(D.night){ctx.fillStyle='rgba(0,0,0,.25)';ctx.beginPath();ctx.arc(it.x,it.y,it.r,0,7);ctx.fill();} }
+  else if(it.draw==='car'||it.draw==='bus'){ const L=it.draw==='bus'?84:46,Wd=it.draw==='bus'?28:24; ctx.save(); ctx.translate(it.x,it.y); ctx.rotate(it.angle); ctx.fillStyle='rgba(0,0,0,.2)'; rr(-L/2+3,-Wd/2+4,L,Wd,6); ctx.fill(); ctx.fillStyle=it.color; rr(-L/2,-Wd/2,L,Wd,6); ctx.fill(); ctx.fillStyle='rgba(60,80,110,.75)'; if(it.draw==='bus'){ for(let k=-L/2+8;k<L/2-10;k+=12){ rr(k,-Wd/2+3,8,Wd-6,2); ctx.fill(); } } else { rr(-L/2+10,-Wd/2+3,10,Wd-6,2); ctx.fill(); rr(L/2-16,-Wd/2+3,8,Wd-6,2); ctx.fill(); } ctx.fillStyle='rgba(255,255,255,.35)'; rr(-L/2+2,-Wd/2+2,L-4,4,2); ctx.fill(); ctx.restore(); }
+  else if(it.draw==='fountain'){ ctx.fillStyle='#b9c7cf'; ctx.beginPath(); ctx.arc(it.x,it.y,it.r,0,7); ctx.fill(); ctx.fillStyle=D.water; ctx.beginPath(); ctx.arc(it.x,it.y,it.r*0.78,0,7); ctx.fill(); ctx.fillStyle='rgba(255,255,255,.7)'; ctx.beginPath(); ctx.arc(it.x,it.y,it.r*0.25+Math.sin(G.t*4)*2,0,7); ctx.fill(); }
+  else {
+    const sz=it.r*2.05;
+    if(it.kind==='heirloom'){ const pulse=1+Math.sin(G.t*3)*0.06; ctx.fillStyle=it.locked?'rgba(240,181,58,.35)':'rgba(120,230,160,.45)'; ctx.beginPath(); ctx.arc(it.x,it.y,it.r*1.5*pulse,0,7); ctx.fill(); ctx.strokeStyle=it.locked?'#f0b53a':'#5fd08a'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(it.x,it.y,it.r*1.3,0,7); ctx.stroke(); if(it.cool>0){ ctx.strokeStyle='#fff'; ctx.beginPath(); ctx.arc(it.x,it.y,it.r*1.3,-Math.PI/2,-Math.PI/2+Math.PI*2*(it.cool/5)); ctx.stroke(); } }
+    else { ctx.fillStyle='rgba(0,0,0,.14)'; ctx.beginPath(); ctx.ellipse(it.x+2,it.y+it.r*0.7,it.r*0.9,it.r*0.35,0,0,7); ctx.fill(); }
+    ctx.font=`${sz}px ${EMOJI_FONT}`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillStyle='#000'; ctx.fillText(it.em,it.x,it.y+sz*0.04);
+    if(it.kind==='heirloom'&&it.locked){ ctx.font=`${it.r*0.9}px ${EMOJI_FONT}`; ctx.fillText('🔒',it.x+it.r*1.1,it.y-it.r*1.0); }
+  }
+  ctx.globalAlpha=1;
+}
+function drawBld(b,alpha,D){
+  ctx.globalAlpha=alpha;
+  const tall=b.kind==='tower'?14:b.kind==='shop'||b.kind==='wall'?8:6;
+  ctx.fillStyle='rgba(0,0,0,.22)'; rr(b.x+tall*0.8,b.y+tall,b.w,b.h,6); ctx.fill();
+  // side wall (fake height)
+  ctx.fillStyle=shade(b.color,-0.25); rr(b.x+tall*0.4,b.y+tall*0.5,b.w,b.h,6); ctx.fill();
+  ctx.fillStyle=b.color; rr(b.x,b.y,b.w,b.h,6); ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.18)'; ctx.lineWidth=1.5; rr(b.x,b.y,b.w,b.h,6); ctx.stroke();
+  // roof details
+  if(b.kind==='house'){ ctx.fillStyle=shade(b.color,-0.12); ctx.beginPath(); ctx.moveTo(b.x+4,b.y+b.h/2); ctx.lineTo(b.x+b.w/2,b.y+4); ctx.lineTo(b.x+b.w-4,b.y+b.h/2); ctx.lineTo(b.x+b.w/2,b.y+b.h-4); ctx.closePath(); ctx.fill(); ctx.fillStyle='#9a6a4a'; rr(b.x+b.w*0.62,b.y+8,8,8,2); ctx.fill(); }
+  else if(b.kind==='tower'){ ctx.fillStyle=shade(b.color,-0.1); rr(b.x+14,b.y+14,b.w-28,b.h-28,4); ctx.fill(); ctx.fillStyle='#cfd6dd'; rr(b.x+b.w-30,b.y+16,14,14,2); ctx.fill(); rr(b.x+16,b.y+b.h-30,18,12,2); ctx.fill(); ctx.fillStyle='#f3f3f3'; ctx.beginPath(); ctx.arc(b.x+b.w/2,b.y+b.h/2,b.w*0.18,0,7); ctx.fill(); ctx.fillStyle='#e8605a'; ctx.font='700 18px Fredoka, sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('H',b.x+b.w/2,b.y+b.h/2+1); }
+  else if(b.kind==='shop'){ ctx.fillStyle=shade(b.color,-0.1); rr(b.x+8,b.y+8,b.w-16,b.h-16,4); ctx.fill(); ctx.fillStyle='#cfd6dd'; rr(b.x+12,b.y+12,12,10,2); ctx.fill(); rr(b.x+b.w-26,b.y+b.h-22,14,10,2); ctx.fill(); ctx.fillStyle=b.win<0.5?'#e8605a':'#4b8fe2'; rr(b.x,b.y+b.h-6,b.w,6,2); ctx.fill(); }
+  else if(b.kind==='kiosk'){ ctx.fillStyle=shade(b.color,-0.15); ctx.beginPath(); ctx.arc(b.x+b.w/2,b.y+b.h/2,b.w*0.3,0,7); ctx.fill(); }
+  else if(b.kind==='wall'){ ctx.fillStyle='rgba(0,0,0,.08)'; const horiz=b.w>b.h; for(let k=10;k<(horiz?b.w:b.h)-8;k+=20){ if(horiz) ctx.fillRect(b.x+k,b.y+6,10,b.h-12); else ctx.fillRect(b.x+6,b.y+k,b.w-12,10); } }
+  if(D.night){ ctx.fillStyle='rgba(255,220,120,.8)'; const cols=Math.floor(b.w/16), rows=Math.floor(b.h/16); for(let i=0;i<cols;i++) for(let j=0;j<rows;j++){ if(((i*7+j*13+Math.floor(b.win*97))%5)<2) ctx.fillRect(b.x+6+i*16,b.y+6+j*16,5,5); } }
+  ctx.globalAlpha=1;
+}
+const shadeCache={};
+function shade(hex,amt){ const key=hex+amt; if(shadeCache[key]) return shadeCache[key]; const n=parseInt(hex.slice(1),16); let r=(n>>16)&255,g=(n>>8)&255,b=n&255; const f=c=>clamp(Math.round(amt<0?c*(1+amt):c+(255-c)*amt),0,255); const out=`rgb(${f(r)},${f(g)},${f(b)})`; shadeCache[key]=out; return out; }
+
+/* ---------- Loop ---------- */
+let last=performance.now();
+function loop(now){
+  const dt=Math.min(0.05,(now-last)/1000); last=now;
+  if(state==='play') update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+function start(){
+  if(progress.unlocked>1) $('#playbtn').textContent=`Continue (Level ${Math.min(40,progress.unlocked)})`;
+  requestAnimationFrame(loop);
+}
+start();
+})();
+</script>
+
+</body></html>

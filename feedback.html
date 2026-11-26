@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ایده دارم — شهرِ بازی</title>
+<meta name="theme-color" content="#FFF4DC">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preload" href="fonts/Vazirmatn-wght.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<div class="fb">
+  <header class="topbar">
+    <a class="brand" href="./"><span id="logo"></span><span data-i18n="site">شهرِ بازی</span></a>
+    <div class="tools">
+      <a class="btn small green" id="playlink" href="./" hidden data-i18n="play">▶ بازی کن</a>
+      <button class="btn small" id="lang" data-i18n="switchLang">English</button>
+    </div>
+  </header>
+
+  <div class="fb-head">
+    <div class="pic" id="pic"></div>
+    <div>
+      <h1 id="title"></h1>
+      <p data-i18n="fbLead">هر چند بار که بخواهی می‌توانی ایده بفرستی.</p>
+    </div>
+  </div>
+
+  <form id="form" novalidate>
+    <section class="step" id="step-rate" style="--c:var(--yellow)">
+      <h2><span class="n" id="n-rate"></span><span data-i18n="s1">این بازی چقدر خوش گذشت؟</span></h2>
+      <div class="faces" id="faces" role="radiogroup" aria-labelledby="step-rate">
+        <button type="button" class="face" role="radio" aria-checked="false" data-v="1" aria-label="1">😞</button>
+        <button type="button" class="face" role="radio" aria-checked="false" data-v="2" aria-label="2">😐</button>
+        <button type="button" class="face" role="radio" aria-checked="false" data-v="3" aria-label="3">🙂</button>
+        <button type="button" class="face" role="radio" aria-checked="false" data-v="4" aria-label="4">😄</button>
+        <button type="button" class="face" role="radio" aria-checked="false" data-v="5" aria-label="5">🤩</button>
+      </div>
+    </section>
+
+    <section class="step" id="step-kind" style="--c:var(--green)">
+      <h2><span class="n" id="n-kind"></span><span data-i18n="s2">چه جور ایده‌ای داری؟</span></h2>
+      <div class="picks" id="kinds" role="radiogroup">
+        <button type="button" class="pick" role="radio" aria-checked="false" data-v="feature" style="--c:#BFEFD3"><span class="e">✨</span><span data-i18n="kFeature"></span></button>
+        <button type="button" class="pick" role="radio" aria-checked="false" data-v="bug" style="--c:#FFD0CC"><span class="e">🔧</span><span data-i18n="kBug"></span></button>
+        <button type="button" class="pick" role="radio" aria-checked="false" data-v="new-game" style="--c:#FFE39A"><span class="e">🎮</span><span data-i18n="kNew"></span></button>
+      </div>
+    </section>
+
+    <section class="step" style="--c:var(--blue)">
+      <h2><span class="n" id="n-text"></span><label for="text" data-i18n="s3">ایده‌ات را بنویس</label></h2>
+      <textarea id="text" maxlength="2000" dir="auto"></textarea>
+    </section>
+
+    <section class="step" style="--c:var(--pink)">
+      <h2><span class="n" id="n-draw"></span><span data-i18n="s4">اگر دوست داری نقاشی‌اش را بکش</span></h2>
+      <div class="pad-wrap"><canvas id="pad" width="720" height="480"></canvas></div>
+      <div class="pad-tools" id="tools">
+        <span id="swatches" style="display:contents"></span>
+        <span class="gap"></span>
+        <button type="button" class="btn small" id="undo" data-i18n="undo">↩ برگرد</button>
+        <button type="button" class="btn small" id="clear" data-i18n="clear">🗑 پاک کن</button>
+      </div>
+    </section>
+
+    <section class="step" style="--c:var(--orange)">
+      <h2><span class="n" id="n-who"></span><span data-i18n="s5">تو کی هستی؟ (اگر دوست داری)</span></h2>
+      <div class="fields">
+        <div><label for="nick" data-i18n="nick">اسمِ مستعار</label><input type="text" id="nick" maxlength="30" autocomplete="off" dir="auto" data-i18n-ph="nickPh"></div>
+        <div><label for="age" data-i18n="age">سن</label><input type="number" id="age" min="3" max="99" inputmode="numeric" autocomplete="off"></div>
+      </div>
+      <p class="hint" data-i18n="safe">اسمِ کامل، نشانی یا شمارهٔ تلفن ننویس.</p>
+    </section>
+
+    <!-- Robots fill every field they see; people never see this one. -->
+    <input type="text" id="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;width:1px;height:1px;padding:0;border:0;opacity:0;clip-path:inset(50%);pointer-events:none">
+
+    <div class="send-row">
+      <button type="submit" class="btn big green" id="send" data-i18n="send">🚀 بفرست</button>
+      <div class="msg" id="msg" role="alert"></div>
+    </div>
+  </form>
+
+  <section class="thanks" id="thanks" hidden tabindex="-1">
+    <span class="emoji" id="thanks-emoji">🎉</span>
+    <h2 id="thanks-title"></h2>
+    <p id="thanks-text"></p>
+    <div class="row">
+      <button class="btn big green" id="again" data-i18n="another">➕ یک ایدهٔ دیگر</button>
+      <a class="btn big" href="./" data-i18n="home">🏠 خانه</a>
+    </div>
+  </section>
+
+  <section class="mine" id="mine" hidden>
+    <h2 data-i18n="mine">ایده‌هایی که از این دستگاه فرستادی</h2>
+    <ul id="mine-list"></ul>
+  </section>
+</div>
+
+<script type="module" src="js/feedback.js"></script>
+</body>
+</html>

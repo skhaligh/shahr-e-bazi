@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>مار جنگل 🌲 — Snake</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 14px;
+    font-family: "Vazirmatn", "Segoe UI", Tahoma, "Iranian Sans", sans-serif;
+    background:
+      radial-gradient(1200px 700px at 50% -10%, #1c3324 0%, #0d1a13 55%, #070d0a 100%);
+    color: #dfeee2;
+  }
+  .wrap { width: min(1180px, 100%); }
+  .topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .title { font-size: 22px; font-weight: 800; letter-spacing: .2px; text-shadow: 0 2px 10px rgba(0,0,0,.6); }
+  .title small { font-size: 12px; font-weight: 500; color: #9fbea9; }
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; margin-inline-start: auto; }
+  .pill {
+    background: linear-gradient(#24402c, #17281c); border: 1px solid rgba(255,255,255,.10);
+    border-radius: 10px; padding: 7px 12px; font-size: 13px; min-width: 84px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 4px 14px rgba(0,0,0,.35);
+  }
+  .pill b { font-size: 15px; color: #ffe9a8; }
+  .stage { position: relative; border-radius: 18px; overflow: hidden; box-shadow: 0 22px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.07); }
+  canvas { display: block; width: 100%; height: auto; touch-action: none; }
+  .overlay {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: rgba(4,10,7,.62); backdrop-filter: blur(4px); text-align: center; padding: 18px;
+  }
+  .card { max-width: 560px; background: rgba(10,20,14,.82); border: 1px solid rgba(255,255,255,.12); border-radius: 16px; padding: 22px 24px; box-shadow: 0 18px 50px rgba(0,0,0,.5); }
+  .card h2 { margin: 0 0 8px; font-size: 26px; color: #f2ffd9; }
+  .card p { margin: 6px 0; font-size: 14px; line-height: 1.9; color: #c6dbc9; }
+  .keys { font-size: 13px; color: #a8c3ad; margin-top: 10px; }
+  .kbd { display: inline-block; padding: 2px 7px; border-radius: 6px; background: #23402b; border: 1px solid rgba(255,255,255,.14); font-size: 12px; margin: 0 2px; }
+  .btn {
+    font: inherit; font-weight: 700; cursor: pointer; border-radius: 10px; padding: 10px 18px; border: 1px solid rgba(255,255,255,.14);
+    background: linear-gradient(#2f6f39, #1d4a26); color: #f0ffe9; box-shadow: 0 6px 18px rgba(0,0,0,.4);
+  }
+  .btn:hover { filter: brightness(1.12); }
+  .btn.big { font-size: 17px; padding: 12px 26px; margin-top: 12px; }
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; font-size: 13px; }
+  .controls .hint { color: #93ae97; }
+  select, .mini {
+    font: inherit; font-size: 13px; border-radius: 9px; padding: 7px 10px;
+    background: #1a2c1f; color: #dfeee2; border: 1px solid rgba(255,255,255,.12); cursor: pointer;
+  }
+  .dpad { display: grid; grid-template-columns: repeat(3, 34px); grid-template-rows: repeat(2, 34px); gap: 4px; }
+  .dpad .btn { padding: 0; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+  .dpad .up { grid-column: 2; grid-row: 1; }
+  .dpad .left { grid-column: 1; grid-row: 2; }
+  .dpad .down { grid-column: 2; grid-row: 2; }
+  .dpad .right { grid-column: 3; grid-row: 2; }
+  .toast {
+    position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+    background: rgba(15,32,20,.85); border: 1px solid rgba(255,255,255,.15); color: #ffe9a8;
+    padding: 7px 14px; border-radius: 10px; font-size: 13px; opacity: 0; transition: opacity .25s; pointer-events: none;
+  }
+  .toast.on { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="title">🌲 مار جنگل <small>— بازی مار با ظاهر طبیعی در جنگل</small></div>
+    <div class="pills">
+      <div class="pill">امتیاز <b id="score">0</b></div>
+      <div class="pill">رکورد <b id="best">0</b></div>
+      <div class="pill">قد مار <b id="len">8</b></div>
+      <div class="pill">سطح <b id="level">1</b></div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <canvas id="game" width="1152" height="768"></canvas>
+    <div class="overlay" id="overlay">
+      <div class="card">
+        <h2 id="ovTitle">🐍 مار جنگل</h2>
+        <p id="ovText">مار را در جنگل هدایت کن، سیب و قارچ بخور و بزرگ‌تر شو. به درختان و لبه‌های انبوه جنگل نخور!</p>
+        <p class="keys">
+          کنترل: <span class="kbd">↑ ↓ ← →</span> یا <span class="kbd">W A S D</span> —
+          مکث: <span class="kbd">Space</span> — روی موبایل: کشیدن انگشت
+        </p>
+        <button class="btn big" id="ovBtn">شروع بازی</button>
+      </div>
+    </div>
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <div class="controls">
+    <button class="btn" id="pauseBtn">مکث</button>
+    <button class="btn" id="restartBtn">شروع دوباره</button>
+    <button class="btn" id="muteBtn">صدا: روشن</button>
+    <label>سرعت
+      <select id="speedSel">
+        <option value="slow">آهسته</option>
+        <option value="normal" selected>عادی</option>
+        <option value="fast">تند</option>
+      </select>
+    </label>
+    <label><input type="checkbox" id="wrapChk"> عبور از لبه‌ها</label>
+    <div class="dpad">
+      <button class="btn up" data-dir="up">↑</button>
+      <button class="btn left" data-dir="left">←</button>
+      <button class="btn down" data-dir="down">↓</button>
+      <button class="btn right" data-dir="right">→</button>
+    </div>
+    <span class="hint">سیب = ۱۰ امتیاز · سیب طلایی = ۱۰۰ امتیاز (موقتی)</span>
+  </div>
+</div>
+
+<script>
+"use strict";
+(function () {
+/* ============================ ثابت‌ها و ابزار ============================ */
+const CELL = 32, COLS = 36, ROWS = 24, W = COLS * CELL, H = ROWS * CELL;
+const TAU = Math.PI * 2;
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const lerp = (a, b, t) => a + (b - a) * t;
+const dist2 = (ax, ay, bx, by) => (ax - bx) ** 2 + (ay - by) ** 2;
+const fmt = n => String(n).replace(/\d/g, d => "۰۱۲۳۴۵۶۷۸۹"[d]);
+
+let seed = 1337;
+function rnd() { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; }
+function rr(a, b) { return a + rnd() * (b - a); }
+function ri(a, b) { return Math.floor(rr(a, b + 1)); }
+function pick(arr) { return arr[Math.floor(rnd() * arr.length)]; }
+
+const cv = document.getElementById('game');
+const ctx = cv.getContext('2d');
+let DPR = 1;
+function fitCanvas() {
+  DPR = clamp(window.devicePixelRatio || 1, 1, 2);
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  cv.style.aspectRatio = W + ' / ' + H;
+  buildBackground();
+}
+window.addEventListener('resize', fitCanvas);
+
+/* ============================ حالت بازی ============================ */
+const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+const BASE_TICK = { slow: 155, normal: 122, fast: 96 };
+
+let state = 'menu';          // menu | playing | paused | dead
+let cells, path, len, headDir, pending, growth, wrapOn = false;
+let head, tickDur, tickT, food, bonus, bonusTimer, score, eaten, level, combo, comboT;
+let dieT, particles, rings, scoreToast, scoreToastT, shakeT, flashT;
+let tongueT = 2.2, blinkT = 3, blinkOn = 0;
+let best = 0;
+try { best = parseInt(localStorage.getItem('forest_snake_best') || '0', 10) || 0; } catch (e) {}
+
+function resetGame() {
+  const cy = Math.floor(ROWS / 2), cx = 8;
+  cells = [];
+  for (let i = len0() - 1; i >= 0; i--) cells.push({ x: cx - i, y: cy });
+  len = cells.length; growth = 0; headDir = [1, 0]; pending = [];
+  path = [];
+  for (let k = len0() + 59; k >= len0(); k--) path.push({ x: cx - k, y: cy });
+  for (const c of cells) path.push({ x: c.x, y: c.y });
+  head = path.length - 1;
+  tickT = 0;
+  food = null; bonus = null; bonusTimer = 0;
+  score = 0; eaten = 0; level = 1; combo = 1; comboT = 0;
+  applySpeed();
+  dieT = 0; particles = []; rings = []; scoreToast = ''; scoreToastT = 0; shakeT = 0; flashT = 0;
+  placeFood();
+  hud();
+}
+function len0() { return 8; }
+function applySpeed() {
+  tickDur = Math.max(60, (BASE_TICK[speedSel.value] || 122) - 6 * (level - 1));
+  if (tickT >= tickDur) tickT = tickDur - 1;
+}
+
+/* جهت بعدی (با بافر تا دو حرکت) */
+function pushDir(name) {
+  const d = DIRS[name]; if (!d) return;
+  const ref = pending.length ? pending[pending.length - 1] : headDir;
+  if (d[0] === -ref[0] && d[1] === -ref[1]) return;   // چرخش ۱۸۰ درجه ممنوع
+  if (d[0] === ref[0] && d[1] === ref[1]) return;      // تکراری
+  if (pending.length < 2) pending.push(d);
+}
+
+function sameCell(a, b) { return a.x === b.x && a.y === b.y; }
+
+function stepHead() {
+  const nd = pending.length ? pending.shift() : headDir;
+  headDir = nd;
+  let nh = { x: cells[cells.length - 1].x + nd[0], y: cells[cells.length - 1].y + nd[1] };
+  if (wrapOn) {
+    if (nh.x < 0) nh.x += COLS; if (nh.x >= COLS) nh.x -= COLS;
+    if (nh.y < 0) nh.y += ROWS; if (nh.y >= ROWS) nh.y -= ROWS;
+  } else if (nh.x < 0 || nh.x >= COLS || nh.y < 0 || nh.y >= ROWS) return die();
+  // وقتی رشد در صف است، دم جایش می‌ماند؛ پس خانهٔ دم هم ممنوع است
+  const from = growth > 0 ? 0 : 1;
+  const lim = cells.length - (growth > 0 ? 0 : 1);
+  for (let i = from; i < lim; i++) if (sameCell(cells[i], nh)) return die();
+  cells.push(nh);
+  if (food && sameCell(food, nh)) {
+    eatFood(false); growth += 1;
+  } else if (bonus && sameCell(bonus, nh)) {
+    eatFood(true); growth += 2;
+  } else if (growth > 0) growth--;
+  else cells.shift();
+  if (cells.length > 800) cells.shift();
+  path.push(nh);
+  while (path.length > cells.length + 140) path.shift();
+  head = path.length - 1;
+  len = cells.length;
+  if (bonus && bonusTimer <= 0) { bonus = null; }
+}
+
+function toggleWrap() { wrapOn = !wrapOn; }
+
+/* ============================ غذا ============================ */
+function randFreeCell() {
+  const taken = new Set();
+  for (const c of cells) taken.add(c.y * COLS + c.x);
+  if (food) taken.add(food.y * COLS + food.x);
+  if (bonus) taken.add(bonus.y * COLS + bonus.x);
+  const free = [];
+  for (let y = 1; y < ROWS - 1; y++) for (let x = 1; x < COLS - 1; x++) {
+    if (!taken.has(y * COLS + x)) free.push({ x, y });
+  }
+  if (free.length) return free[ri(0, free.length - 1)];
+  return { x: ri(2, COLS - 3), y: ri(2, ROWS - 3) };
+}
+function placeFood() {
+  const c = randFreeCell();
+  const t = rnd();
+  food = { x: c.x, y: c.y, type: t < 0.60 ? 'apple' : t < 0.82 ? 'berry' : 'mushroom', ph: rnd() * TAU, col: pick(['#d6452e', '#c0392b', '#b7412c', '#d95f38']) };
+}
+function maybeBonus() {
+  if (bonus) return;
+  const c = randFreeCell();
+  bonus = { x: c.x, y: c.y, type: 'golden', ph: rnd() * TAU };
+  bonusTimer = 9.5;
+}
+function eatFood(golden) {
+  const c = golden ? bonus : food;
+  const cx = (c.x + .5) * CELL, cy = (c.y + .5) * CELL;
+  const gained = golden ? 100 : Math.round(10 * combo);
+  score += gained; eaten++;
+  combo = clamp(combo + 0.25, 1, 3); comboT = 2.4;
+  scoreToast = '+' + fmt(gained); scoreToastT = 1.1;
+  flashT = 0.18;
+  burst(cx, cy, golden ? '#ffd95e' : c.type === 'mushroom' ? '#e8d6b8' : '#8fd06a');
+  rings.push({ x: cx, y: cy, r: 6, max: golden ? 46 : 30, life: 0.5, t: 0, col: golden ? '#ffe08a' : '#dff0c8' });
+  if (golden) { bonus = null; bonusTimer = 0; sfx('golden'); }
+  else { placeFood(); sfx('eat'); }
+  if (eaten % 5 === 0) {
+    level++; applySpeed();
+    toast('سطح ' + fmt(level) + ' — جنگل کمی تندتر می‌شود!');
+  }
+  if (!bonus && eaten % 4 === 0 && rnd() < 0.7) maybeBonus();
+  hud();
+}
+function burst(x, y, col) {
+  for (let i = 0; i < 12; i++) {
+    const a = rnd() * TAU, sp = rr(40, 170);
+    particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 40, life: rr(.35, .8), t: 0, col, r: rr(1.2, 3.2) });
+  }
+}
+function die() {
+  state = 'dead'; dieT = 0; shakeT = 0.45; sfx('die');
+  const hc = cells[cells.length - 1];
+  burst((hc.x + .5) * CELL, (hc.y + .5) * CELL, '#7f9a72');
+  if (score > best) { best = score; try { localStorage.setItem('forest_snake_best', String(best)); } catch (e) {} }
+  hud();
+  showOverlay('💀 پایان بازی',
+    'امتیاز شما: ' + fmt(score) + ' · قد مار: ' + fmt(len) + ' · رکورد: ' + fmt(best),
+    'دوباره بازی کن');
+}
+
+/* ============================ لایه پس‌زمینه (جنگل استاتیک) ============================ */
+let bg = document.createElement('canvas');
+function buildBackground() {
+  seed = 1337;
+  bg.width = cv.width; bg.height = cv.height;
+  const b = bg.getContext('2d');
+  b.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+  // زمین جنگل: چمن با تکه‌های خاک
+  b.fillStyle = '#2b4a2a'; b.fillRect(0, 0, W, H);
+  for (let i = 0; i < 90; i++) {
+    const x = rr(0, W), y = rr(0, H), w = rr(40, 150), h = rr(24, 70);
+    b.fillStyle = pick(['#35582f', '#24421f', '#3d5c31', '#294826']);
+    blob(b, x, y, w, h, 10);
+  }
+  // لکه‌های خاک تیره و برگ‌های پوسیده
+  for (let i = 0; i < 40; i++) {
+    b.fillStyle = 'rgba(70,54,34,.35)';
+    blob(b, rr(0, W), rr(0, H), rr(30, 90), rr(18, 46), 8);
+  }
+  // ساقه‌های چمن
+  for (let i = 0; i < 900; i++) {
+    const x = rr(0, W), y = rr(0, H), hgt = rr(5, 12), lean = rr(-3, 3);
+    b.strokeStyle = pick(['#3f7038', '#4d8141', '#2f5c2a', '#57934a']);
+    b.lineWidth = 1.1; b.beginPath(); b.moveTo(x, y); b.quadraticCurveTo(x + lean, y - hgt * .6, x + lean * 1.8, y - hgt); b.stroke();
+  }
+  // برگ‌های ریخته
+  for (let i = 0; i < 70; i++) {
+    const x = rr(0, W), y = rr(0, H);
+    b.save(); b.translate(x, y); b.rotate(rr(0, TAU));
+    b.fillStyle = pick(['#6b4a26', '#7d5b2c', '#5d3f22', '#8a6a33', '#4e6b30']);
+    b.beginPath(); b.ellipse(0, 0, rr(5, 10), rr(2.4, 4.5), 0, 0, TAU); b.fill();
+    b.strokeStyle = 'rgba(0,0,0,.22)'; b.lineWidth = .8; b.beginPath(); b.moveTo(-6, 0); b.lineTo(6, 0); b.stroke();
+    b.restore();
+  }
+  // سنگ‌ریزه
+  for (let i = 0; i < 26; i++) {
+    const x = rr(0, W), y = rr(0, H);
+    b.fillStyle = 'rgba(0,0,0,.20)'; b.beginPath(); b.ellipse(x + 2, y + 3, rr(4, 8), rr(2.5, 5), 0, 0, TAU); b.fill();
+    b.fillStyle = pick(['#7c8178', '#8d9188', '#6a7066']); b.beginPath(); b.ellipse(x, y, rr(4, 8), rr(2.5, 5), 0, 0, TAU); b.fill();
+    b.fillStyle = 'rgba(255,255,255,.25)'; b.beginPath(); b.ellipse(x - 1, y - 1.5, 2.2, 1.4, 0, 0, TAU); b.fill();
+  }
+  // تنه درختان افتاده
+  for (let i = 0; i < 4; i++) {
+    const x = rr(60, W - 60), y = rr(60, H - 60), L = rr(60, 120), th = rr(9, 13), a = rr(-0.5, 0.5);
+    b.save(); b.translate(x, y); b.rotate(a);
+    b.fillStyle = 'rgba(0,0,0,.28)'; roundRect(b, -L / 2 + 3, -th / 2 + 4, L, th, 6); b.fill();
+    b.fillStyle = '#5b4327'; roundRect(b, -L / 2, -th / 2, L, th, 6); b.fill();
+    b.strokeStyle = '#43301b'; b.lineWidth = 1; for (let k = 0; k < 4; k++) { b.beginPath(); b.moveTo(-L / 2 + 6, -th / 2 + 2 + k * 2.6); b.lineTo(L / 2 - 6, -th / 2 + 2 + k * 2.6); b.stroke(); }
+    b.fillStyle = '#8a6b41'; b.beginPath(); b.ellipse(L / 2, 0, 3.5, th / 2, 0, 0, TAU); b.fill();
+    b.fillStyle = '#a58456'; b.beginPath(); b.ellipse(L / 2, 0, 1.6, th / 4, 0, 0, TAU); b.fill();
+    b.restore();
+  }
+  // سرخس‌ها
+  for (let i = 0; i < 26; i++) fern(b, rr(20, W - 20), rr(20, H - 20), rr(.7, 1.2));
+  // قارچ‌های تزئینی
+  for (let i = 0; i < 14; i++) decoMushroom(b, rr(20, W - 20), rr(20, H - 20));
+  // گل‌های کوچک
+  for (let i = 0; i < 22; i++) flower(b, rr(15, W - 15), rr(15, H - 15));
+
+  drawForestFrame(b);
+
+  // نورهای لکه‌ای ثابت (نور筛)
+  for (let i = 0; i < 12; i++) {
+    const x = rr(0, W), y = rr(0, H), r = rr(60, 150);
+    const g = b.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, 'rgba(255,244,180,.16)'); g.addColorStop(1, 'rgba(255,244,180,0)');
+    b.fillStyle = g; b.beginPath(); b.arc(x, y, r, 0, TAU); b.fill();
+  }
+  vignette(b);
+}
+
+function blob(c, x, y, w, h, lobes) {
+  c.beginPath();
+  for (let i = 0; i <= lobes; i++) {
+    const a = i / lobes * TAU;
+    const rx = w / 2 * (1 + Math.sin(a * 2.3 + x) * .12), ry = h / 2 * (1 + Math.cos(a * 1.7 + y) * .12);
+    const px = x + Math.cos(a) * rx, py = y + Math.sin(a) * ry;
+    if (i === 0) c.moveTo(px, py); else c.lineTo(px, py);
+  }
+  c.closePath(); c.fill();
+}
+function roundRect(c, x, y, w, h, r) {
+  c.beginPath();
+  c.moveTo(x + r, y); c.lineTo(x + w - r, y); c.quadraticCurveTo(x + w, y, x + w, y + r);
+  c.lineTo(x + w, y + h - r); c.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  c.lineTo(x + r, y + h); c.quadraticCurveTo(x, y + h, x, y + h - r);
+  c.lineTo(x, y + r); c.quadraticCurveTo(x, y, x + r, y); c.closePath();
+}
+function fern(c, x, y, s) {
+  c.save(); c.translate(x, y); c.rotate(rr(-.4, .4)); c.scale(s, s);
+  for (let f = 0; f < 4; f++) {
+    const a = -0.9 + f * 0.55, L = rr(18, 26);
+    const ex = Math.sin(a) * L, ey = -Math.cos(a) * L;
+    c.strokeStyle = '#2e5c2b'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(ex * .4, ey * .75, ex, ey); c.stroke();
+    c.fillStyle = f % 2 ? '#3d7837' : '#356b30';
+    for (let k = 1; k <= 7; k++) {
+      const t = k / 8, px = lerp(0, ex, t) + Math.sin(t * 2) * 2, py = lerp(0, ey, t);
+      for (const sgn of [-1, 1]) {
+        c.save(); c.translate(px, py); c.rotate(a + sgn * 0.9);
+        c.beginPath(); c.ellipse(4 * sgn, 0, 4.2, 1.6, 0, 0, TAU); c.fill(); c.restore();
+      }
+    }
+  }
+  c.restore();
+}
+function decoMushroom(c, x, y) {
+  const s = rr(.7, 1.3);
+  c.save(); c.translate(x, y); c.scale(s, s);
+  c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(2, 3, 7, 3, 0, 0, TAU); c.fill();
+  c.fillStyle = '#e9dcc0'; roundRect(c, -2, -6, 4, 8, 1.6); c.fill();
+  const cap = pick(['#b8552f', '#c46a3a', '#8d4a2b', '#d9b06a']);
+  c.fillStyle = cap; c.beginPath(); c.ellipse(0, -6, 8, 5.2, 0, Math.PI, TAU); c.closePath(); c.fill();
+  c.fillStyle = 'rgba(255,250,240,.85)';
+  for (let i = 0; i < 4; i++) { c.beginPath(); c.arc(rr(-6, 6), rr(-9, -6.5), rr(.8, 1.5), 0, TAU); c.fill(); }
+  c.restore();
+}
+function flower(c, x, y) {
+  const col = pick(['#f3f0e2', '#f6d76a', '#e2b3c6', '#cfd8ff']);
+  c.save(); c.translate(x, y);
+  c.strokeStyle = '#3a6a34'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(0, 0); c.lineTo(rr(-2, 2), -8); c.stroke();
+  c.fillStyle = col;
+  for (let i = 0; i < 5; i++) { const a = i / 5 * TAU; c.beginPath(); c.ellipse(Math.cos(a) * 3, -8 + Math.sin(a) * 3, 2.2, 2.6, a, 0, TAU); c.fill(); }
+  c.fillStyle = '#e8a92b'; c.beginPath(); c.arc(0, -8, 1.6, 0, TAU); c.fill();
+  c.restore();
+}
+
+/* حاشیه انبوه جنگل: تنه‌ها، ریشه‌ها و برگ‌ها */
+function drawForestFrame(c) {
+  const band = CELL * 0.78;
+  // هاله تاریک زیر حاشیه
+  c.fillStyle = 'rgba(10,22,13,.55)';
+  c.fillRect(0, 0, W, band); c.fillRect(0, H - band, W, band); c.fillRect(0, 0, band, H); c.fillRect(W - band, 0, band, H);
+
+  // تنه‌ها در گوشه‌ها و طول لبه‌ها
+  const trunks = [];
+  for (const side of ['top', 'bottom', 'left', 'right']) {
+    const n = side === 'top' || side === 'bottom' ? 5 : 4;
+    for (let i = 0; i < n; i++) {
+      const t = (i + .5) / n + rr(-.06, .06);
+      trunks.push({ side, t, w: rr(16, 30), h: rr(34, 60) });
+    }
+  }
+  for (const tr of trunks) {
+    let x, y;
+    if (tr.side === 'top') { x = tr.t * W; y = -4; }
+    else if (tr.side === 'bottom') { x = tr.t * W; y = H + 4; }
+    else if (tr.side === 'left') { x = -4; y = tr.t * H; }
+    else { x = W + 4; y = tr.t * H; }
+    const vert = tr.side === 'left' || tr.side === 'right';
+    c.save(); c.translate(x, y);
+    c.fillStyle = '#4a3521';
+    if (vert) roundRect(c, -tr.h * .45, -tr.w / 2, tr.h, tr.w, 6); else roundRect(c, -tr.w / 2, -tr.h * .45, tr.w, tr.h, 6);
+    c.fill();
+    c.strokeStyle = '#31220f'; c.lineWidth = 1.2;
+    for (let k = -1; k <= 1; k++) {
+      c.beginPath();
+      if (vert) { c.moveTo(-tr.h * .4, k * tr.w * .22); c.lineTo(tr.h * .35, k * tr.w * .22 + rr(-2, 2)); }
+      else { c.moveTo(k * tr.w * .22, -tr.h * .4); c.lineTo(k * tr.w * .22 + rr(-2, 2), tr.h * .35); }
+      c.stroke();
+    }
+    c.restore();
+    // ریشه‌های بیرون‌زده
+    c.strokeStyle = '#3c2a17'; c.lineWidth = rr(3, 6); c.lineCap = 'round';
+    const rx = vert ? (tr.side === 'left' ? 6 : W - 6) : x, ry = vert ? y : (tr.side === 'top' ? 6 : H - 6);
+    c.beginPath(); c.moveTo(rx, ry); c.quadraticCurveTo(rx + rr(-14, 14), ry + rr(-14, 14), rx + rr(-22, 22), ry + rr(-24, 24)); c.stroke();
+    c.lineCap = 'butt';
+    leafCluster(c, x, y, rr(34, 54), true);
+  }
+  // پوشش برگهای متراکم روی لبه
+  for (let i = 0; i < 150; i++) {
+    const side = ri(0, 3);
+    let x, y;
+    if (side === 0) { x = rr(0, W); y = rr(-6, band * 1.1); }
+    else if (side === 1) { x = rr(0, W); y = rr(H - band * 1.1, H + 6); }
+    else if (side === 2) { x = rr(-6, band * 1.1); y = rr(0, H); }
+    else { x = rr(W - band * 1.1, W + 6); y = rr(0, H); }
+    leafBlob(c, x, y, rr(16, 34));
+  }
+  // برگ‌های آویزان از بالا (طبیعی‌تر)
+  for (let i = 0; i < 26; i++) {
+    const x = rr(0, W), L = rr(18, 46);
+    c.strokeStyle = '#2c4a24'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(x, 0); c.quadraticCurveTo(x + rr(-10, 10), L * .6, x + rr(-16, 16), L); c.stroke();
+    leafBlob(c, x + rr(-14, 14), L, rr(10, 18));
+  }
+}
+function leafBlob(c, x, y, r) {
+  const cols = ['#1f3d1d', '#28501f', '#2f5c26', '#37682c', '#193018'];
+  for (let k = 0; k < 9; k++) {
+    const a = rnd() * TAU, d = rnd() * r * .8;
+    c.fillStyle = cols[Math.floor(rnd() * cols.length)];
+    c.beginPath();
+    const px = x + Math.cos(a) * d, py = y + Math.sin(a) * d * .8;
+    c.ellipse(px, py, rr(4, 9), rr(3, 6), rnd() * TAU, 0, TAU); c.fill();
+  }
+}
+function leafCluster(c, x, y, r, dark) {
+  leafBlob(c, x, y, r);
+  c.fillStyle = 'rgba(15,30,16,.55)';
+  for (let k = 0; k < 6; k++) { c.beginPath(); c.ellipse(x + rr(-r, r) * .6, y + rr(-r, r) * .6, rr(4, 8), rr(3, 5), rnd() * TAU, 0, TAU); c.fill(); }
+}
+function vignette(c) {
+  let g = c.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, 'rgba(0,0,0,.28)'); g.addColorStop(.25, 'rgba(0,0,0,0)');
+  g.addColorStop(.75, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.30)');
+  c.fillStyle = g; c.fillRect(0, 0, W, H);
+  const cx = W / 2, cy = H / 2, R = Math.hypot(W, H) / 2;
+  g = c.createRadialGradient(cx, cy, R * .45, cx, cy, R);
+  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(3,10,6,.5)');
+  c.fillStyle = g; c.fillRect(0, 0, W, H);
+}
+
+/* ============================ مسیر و بدن مار ============================ */
+const cornerR = 0.34;
+const wrapD = (p, q) => {          // اختلاف خانه‌ها با احتساب عبور از لبه
+  let dx = q.x - p.x, dy = q.y - p.y;
+  if (dx > COLS / 2) dx -= COLS; else if (dx < -COLS / 2) dx += COLS;
+  if (dy > ROWS / 2) dy -= ROWS; else if (dy < -ROWS / 2) dy += ROWS;
+  return [dx, dy];
+};
+function atCell(i) {
+  const np = path.length;
+  if (i < 0) {
+    const a = path[0], b = path[1] || { x: a.x - 1, y: a.y };
+    const d = wrapD(b, a), f = -i;
+    return { x: a.x + d[0] * f, y: a.y + d[1] * f };
+  }
+  if (i >= np) {                       // خانهٔ بعدی که مار در حال رفتن به آن است
+    const a = path[np - 1];
+    const nd = pending.length ? pending[0] : headDir;
+    const f = i - (np - 1);
+    return { x: a.x + nd[0] * f, y: a.y + nd[1] * f };
+  }
+  return path[i];
+}
+function cellPos(i, f) {
+  const A = atCell(i), B = atCell(i + 1);
+  const u = wrapD(A, B);                       // جهت حرکت این پاره (بر حسب خانه)
+  const jump = Math.abs(B.x - A.x) !== Math.abs(u[0]) || Math.abs(B.y - A.y) !== Math.abs(u[1]);
+  if (jump) {                                  // عبور از لبه: نقطهٔ خروج و نقطهٔ ورود
+    if (f < 0.5) return { x: (A.x + u[0] * f * 2) * CELL, y: (A.y + u[1] * f * 2) * CELL };
+    return { x: (B.x - u[0] * (1 - f) * 2) * CELL, y: (B.y - u[1] * (1 - f) * 2) * CELL };
+  }
+  if (Math.abs(u[0]) + Math.abs(u[1]) < 0.5) return { x: A.x * CELL, y: A.y * CELL };
+  const prevA = i > 0 ? atCell(i - 1) : null;
+  const nextB = atCell(i + 2);
+  const inD = prevA ? wrapD(prevA, A) : null;
+  const outD = wrapD(B, nextB);
+  const cornerA = !!inD && (inD[0] !== u[0] || inD[1] !== u[1]);   // گوشه در خانهٔ A
+  const cornerB = (u[0] !== outD[0] || u[1] !== outD[1]);          // گوشه در خانهٔ B
+  if (cornerA && f < cornerR) {
+    const P0 = { x: (A.x + u[0] * cornerR) * CELL, y: (A.y + u[1] * cornerR) * CELL };
+    const P1 = { x: A.x * CELL, y: A.y * CELL };
+    const P2 = { x: (A.x - inD[0] * cornerR) * CELL, y: (A.y - inD[1] * cornerR) * CELL };
+    return bez(P2, P1, P0, f / cornerR);
+  }
+  if (cornerB && f > 1 - cornerR) {
+    const P0 = { x: (B.x - u[0] * cornerR) * CELL, y: (B.y - u[1] * cornerR) * CELL };
+    const P1 = { x: B.x * CELL, y: B.y * CELL };
+    const P2 = { x: (B.x + outD[0] * cornerR) * CELL, y: (B.y + outD[1] * cornerR) * CELL };
+    return bez(P0, P1, P2, (f - (1 - cornerR)) / cornerR);
+  }
+  return { x: lerp(A.x, B.x, f) * CELL, y: lerp(A.y, B.y, f) * CELL };
+}
+function bez(p0, p1, p2, t) {
+  const mt = 1 - t;
+  return { x: mt * mt * p0.x + 2 * mt * t * p1.x + t * t * p2.x, y: mt * mt * p0.y + 2 * mt * t * p1.y + t * t * p2.y };
+}
+
+let LUT = { pts: [], cum: [], n: 0, stamp: -1 };
+function buildTube(sHead, dist) {
+  const hIdx = Math.floor(sHead), hf = sHead - hIdx;
+  const A = cellPos(hIdx, hf), B = cellPos(hIdx + 1, 0);
+  const step = 0.11;
+  const pts = [], cum = [0];
+  let x = A.x, y = A.y, acc = 0;
+  pts.push({ x, y });
+  let guard = 0;
+  for (let s = step; s <= dist + 1e-6 && guard < 9000; s += step, guard++) {
+    const q = sHead - s;
+    const i = Math.floor(q), f = q - i;
+    const p = cellPos(i, f);
+    // برش در محل عبور از لبه (تا بدنه از یک طرف بیرون و از طرف دیگر داخل دیده شود)
+    if (Math.abs(p.x - x) > CELL * 1.3 || Math.abs(p.y - y) > CELL * 1.3) {
+      x = p.x; y = p.y; pts.push({ x, y, split: true }); cum.push(acc); continue;
+    }
+    const dd = Math.hypot(p.x - x, p.y - y);
+    acc += dd; x = p.x; y = p.y;
+    pts.push({ x, y }); cum.push(acc);
+  }
+  LUT = { pts, cum, n: pts.length, stamp: head * 100000 + Math.round(dist * 100) };
+  return LUT;
+}
+function headWidth() { return 0.86 * CELL; }
+function widthAt(t) {   // t: 0 در سر، 1 در دم
+  const hw = headWidth();
+  if (t < 0.10) return hw * (1 - 0.06 * (t / 0.10));
+  if (t > 0.90) return hw * lerp(0.26, 0.05, (t - 0.90) / 0.10);
+  return hw * lerp(0.94, 0.26, (t - 0.10) / 0.80);
+}
+
+/* ============================ صدا ============================ */
+let actx = null, muted = false;
+function sfx(kind) {
+  if (muted) return;
+  try {
+    if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    const t = actx.currentTime;
+    const mk = (f0, f1, dur, type, vol) => {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = type; o.frequency.setValueAtTime(f0, t);
+      if (f1) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+      o.connect(g).connect(actx.destination); o.start(t); o.stop(t + dur + .02);
+    };
+    if (kind === 'eat') { mk(540, 700, 0.09, 'triangle', 0.16); mk(300, 180, 0.16, 'sine', 0.10); }
+    else if (kind === 'golden') { mk(660, 1320, 0.24, 'triangle', 0.18); mk(990, 1500, 0.18, 'sine', 0.09); }
+    else if (kind === 'die') { mk(320, 70, 0.5, 'sawtooth', 0.16); mk(160, 45, 0.6, 'triangle', 0.10); }
+  } catch (e) {}
+}
+
+/* ============================ اجزای متحرک محیط ============================ */
+let motes = [], flies = [], shafts = [], dapples = [];
+function initAmbient() {
+  seed = 777; motes = []; flies = []; shafts = []; dapples = [];
+  for (let i = 0; i < 34; i++) motes.push({ x: rr(0, W), y: rr(0, H), vx: rr(-8, 8), vy: rr(-6, 4), ph: rnd() * TAU, r: rr(.6, 1.9), a: rr(.15, .5) });
+  for (let i = 0; i < 10; i++) flies.push({ x: rr(30, W - 30), y: rr(30, H - 30), vx: rr(-14, 14), vy: rr(-10, 10), ph: rnd() * TAU, bl: rnd() * TAU });
+  for (let i = 0; i < 4; i++) shafts.push({ x: rr(60, W - 120), w: rr(50, 110), sk: rr(30, 80), a: rr(.05, .10), ph: rnd() * TAU });
+  for (let i = 0; i < 7; i++) dapples.push({ x: rr(20, W - 20), y: rr(20, H - 20), r: rr(50, 120), vx: rr(-5, 5), vy: rr(-3, 3), a: rr(.05, .12), ph: rnd() * TAU });
+}
+initAmbient();
+
+function drawAmbient(t) {
+  // پرتوهای نور از لابه‌لای برگ‌ها
+  for (const s of shafts) {
+    const drift = Math.sin(t * .13 + s.ph) * 24;
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, 'rgba(255,242,190,' + s.a.toFixed(3) + ')');
+    g.addColorStop(1, 'rgba(255,242,190,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(s.x + drift, 0); ctx.lineTo(s.x + s.w + drift, 0);
+    ctx.lineTo(s.x + s.w + s.sk + drift, H); ctx.lineTo(s.x + s.sk + drift, H);
+    ctx.closePath(); ctx.fill();
+  }
+  // لکه‌های نور متحرک (برگ‌های تکان‌خورده)
+  for (const d of dapples) {
+    const x = d.x + Math.sin(t * .35 + d.ph) * 18, y = d.y + Math.cos(t * .27 + d.ph) * 12;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, d.r);
+    g.addColorStop(0, 'rgba(255,246,190,' + d.a.toFixed(3) + ')');
+    g.addColorStop(1, 'rgba(255,246,190,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, d.r, 0, TAU); ctx.fill();
+  }
+  // گرده و ذرات معلق
+  for (const m of motes) {
+    m.x += m.vx * dt; m.y += (m.vy + Math.sin(t * 1.2 + m.ph) * 5) * dt;
+    if (m.x < -10) m.x = W + 10; if (m.x > W + 10) m.x = -10;
+    if (m.y < -10) m.y = H + 10; if (m.y > H + 10) m.y = -10;
+    ctx.fillStyle = 'rgba(255,250,220,' + (m.a * (0.6 + 0.4 * Math.sin(t * 2 + m.ph))).toFixed(3) + ')';
+    ctx.beginPath(); ctx.arc(m.x, m.y, m.r, 0, TAU); ctx.fill();
+  }
+  // کرم‌های شب‌تاب
+  for (const f of flies) {
+    f.x += (f.vx + Math.sin(t * .9 + f.ph) * 12) * dt; f.y += (f.vy + Math.cos(t * 1.1 + f.ph) * 9) * dt;
+    if (f.x < 8) f.x = W - 8; if (f.x > W - 8) f.x = 8;
+    if (f.y < 8) f.y = H - 8; if (f.y > H - 8) f.y = 8;
+    const bl = Math.max(0, Math.sin(t * 2.3 + f.bl));
+    const glow = bl * bl;
+    if (glow > 0.02) {
+      const g = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, 11);
+      g.addColorStop(0, 'rgba(255,240,140,' + (glow * .55).toFixed(3) + ')');
+      g.addColorStop(1, 'rgba(255,240,140,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(f.x, f.y, 11, 0, TAU); ctx.fill();
+    }
+    ctx.fillStyle = 'rgba(120,130,90,.6)'; ctx.beginPath(); ctx.arc(f.x, f.y, 1.3, 0, TAU); ctx.fill();
+  }
+}
+
+/* حاشیه متحرک: برگ‌هایی که با نسیم تکان می‌خورند */
+function drawFoliageMotion(t) {
+  ctx.save();
+  for (let i = 0; i < 40; i++) {
+    const side = i % 4, k = Math.floor(i / 4);
+    const sw = Math.sin(t * 1.1 + k * 1.7 + side) * 3.2;
+    let x, y;
+    if (side === 0) { x = (k + .5) / 10 * W + sw * 2; y = 10 + Math.sin(t + k) * 3; }
+    else if (side === 1) { x = (k + .5) / 10 * W + sw * 2; y = H - 10 + Math.cos(t + k) * 3; }
+    else if (side === 2) { x = 10 + Math.cos(t * 1.2 + k) * 3; y = (k + .5) / 10 * H + sw; }
+    else { x = W - 10 + Math.sin(t * 1.2 + k) * 3; y = (k + .5) / 10 * H + sw; }
+    ctx.fillStyle = pick2(['rgba(46,92,38,.75)', 'rgba(32,66,28,.75)', 'rgba(60,110,46,.6)'], k);
+    ctx.beginPath(); ctx.ellipse(x, y, 12, 8, Math.sin(t * .8 + k) * .5, 0, TAU); ctx.fill();
+  }
+  ctx.restore();
+}
+function pick2(arr, i) { return arr[i % arr.length]; }
+
+/* ============================ نقاشی غذا ============================ */
+function drawFood(f, golden) {
+  const cx = (f.x + .5) * CELL, cy = (f.y + .5) * CELL;
+  const sway = Math.sin(gt * 1.6 + f.ph) * 0.06;
+  ctx.save(); ctx.translate(cx, cy + 6); ctx.rotate(sway); ctx.translate(0, -6);
+  ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.ellipse(2, 9, 10, 4, 0, 0, TAU); ctx.fill();
+
+  if (golden) {
+    const pulse = 0.5 + 0.5 * Math.sin(gt * 5 + f.ph);
+    const g = ctx.createRadialGradient(0, 0, 2, 0, 0, 26);
+    g.addColorStop(0, 'rgba(255,220,110,' + (0.30 + 0.2 * pulse).toFixed(3) + ')');
+    g.addColorStop(1, 'rgba(255,220,110,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, 26, 0, TAU); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,235,150,.75)'; ctx.lineWidth = 2; ctx.setLineDash([6, 5]);
+    ctx.beginPath(); ctx.arc(0, 0, 16, gt * 2, gt * 2 + TAU * (bonusTimer / 9.5)); ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  if (f.type === 'apple' || f.type === 'golden') {
+    const gold = f.type === 'golden';
+    const base = gold ? '#f5c63b' : (f.col || '#c0392b');
+    ctx.fillStyle = base;
+    ctx.beginPath();
+    ctx.moveTo(0, -8);
+    ctx.bezierCurveTo(-13, -12, -14, 6, 0, 10);
+    ctx.bezierCurveTo(14, 6, 13, -12, 0, -8);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.35)';
+    ctx.beginPath(); ctx.ellipse(-5, -3, 3.4, 4.6, -0.5, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#5a3c1c'; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.moveTo(0, -8); ctx.quadraticCurveTo(1, -14, 3, -15); ctx.stroke();
+    ctx.fillStyle = '#3f7a33';
+    ctx.beginPath(); ctx.ellipse(7, -13, 5, 2.6, -0.5, 0, TAU); ctx.fill();
+    if (gold) { ctx.strokeStyle = 'rgba(120,80,10,.6)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(0, 0, 9, 0, TAU); ctx.stroke(); }
+  } else if (f.type === 'berry') {
+    const cols = ['#7d2a4d', '#8e2f57', '#5f1f3d'];
+    for (let i = 0; i < 4; i++) {
+      const a = i / 4 * TAU + 0.4, x = Math.cos(a) * 5.5, y = Math.sin(a) * 4.5;
+      ctx.fillStyle = cols[i % 3]; ctx.beginPath(); ctx.arc(x, y, 5, 0, TAU); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,.4)'; ctx.beginPath(); ctx.arc(x - 1.6, y - 1.8, 1.4, 0, TAU); ctx.fill();
+    }
+    ctx.strokeStyle = '#3f6b31'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(0, -6); ctx.lineTo(2, -12); ctx.stroke();
+  } else { // قارچ
+    ctx.fillStyle = '#efe3c8'; roundRect(ctx, -3.5, -2, 7, 12, 2); ctx.fill();
+    ctx.fillStyle = '#c8582f';
+    ctx.beginPath(); ctx.ellipse(0, -2, 12, 8, 0, Math.PI, TAU); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(255,248,235,.9)';
+    for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.arc(-8 + i * 3.2, -5 - Math.sin(i) * 2, 1.5, 0, TAU); ctx.fill(); }
+    ctx.strokeStyle = 'rgba(70,30,15,.5)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(0, -2, 12, 8, 0, Math.PI, TAU); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/* ============================ نقاشی مار طبیعی ============================ */
+let patternCache = null;
+function bodyPattern() {
+  if (patternCache) return patternCache;
+  const c = document.createElement('canvas'); c.width = 64; c.height = 32;
+  const p = c.getContext('2d');
+  p.fillStyle = '#3e7440'; p.fillRect(0, 0, 64, 32);
+  // لوزی‌های پشت تیره (الگوی مار جنگلی)
+  p.fillStyle = '#1d3b21';
+  for (let row = 0; row < 2; row++) {
+    for (let col = 0; col < 4; col++) {
+      const cx = col * 16 + (row % 2 ? 8 : 0) + 8, cy = row * 16 + 8;
+      p.beginPath();
+      p.moveTo(cx, cy - 9); p.lineTo(cx + 7, cy); p.lineTo(cx, cy + 9); p.lineTo(cx - 7, cy); p.closePath();
+      p.fill();
+    }
+  }
+  // حاشیه روشن لوزی‌ها
+  p.strokeStyle = 'rgba(150,200,140,.35)'; p.lineWidth = 1;
+  for (let row = 0; row < 2; row++) {
+    for (let col = 0; col < 4; col++) {
+      const cx = col * 16 + (row % 2 ? 8 : 0) + 8, cy = row * 16 + 8;
+      p.beginPath();
+      p.moveTo(cx, cy - 9); p.lineTo(cx + 7, cy); p.lineTo(cx, cy + 9); p.lineTo(cx - 7, cy); p.closePath(); p.stroke();
+    }
+  }
+  // فلس‌ریزی ظریف
+  p.strokeStyle = 'rgba(10,24,12,.25)'; p.lineWidth = .8;
+  for (let i = 0; i < 40; i++) {
+    const x = rr(0, 64), y = rr(0, 32);
+    p.beginPath(); p.arc(x, y, 2.2, 0.2, Math.PI - 0.2); p.stroke();
+  }
+  patternCache = ctx.createPattern(c, 'repeat');
+  return patternCache;
+}
+
+function drawSnake() {
+  const sHead = head + tickT / tickDur;
+  const dist = Math.max(1, cells.length - 1);      // طول بدن بر حسب خانه
+  buildTube(sHead, dist);
+  const pts = LUT.pts, cum = LUT.cum, n = LUT.n;
+  const total = cum[n - 1] || 1;                   // طول پاره‌بر حسب پیکسل
+
+  // موج بدنه و تنفس
+  const breathe = 1 + 0.05 * Math.sin(gt * 2.1);
+  const wave = (t, s) => 1 + 0.11 * Math.sin(t * 10 - gt * 5.2) * clamp(t * 1.6, 0, 1);
+
+  // ساخت نقاط دو طرف لوله
+  const left = [], right = [];
+  let curPart = { l: [], r: [] };
+  const parts = [curPart];
+  for (let k = 0; k < n; k++) {
+    const s = cum[k], t = clamp(s / total, 0, 1);
+    const hw = widthAt(t) * 0.5 * breathe * wave(t, s);
+    const kPrev = Math.max(0, Math.min(n - 1, k - 1));
+    const kNext = Math.max(0, Math.min(n - 1, k + 1));
+    let dx = pts[kNext].x - pts[kPrev].x, dy = pts[kNext].y - pts[kPrev].y;
+    let m = Math.hypot(dx, dy);
+    if (m < 1e-6) { dx = 1; dy = 0; m = 1; }
+    dx /= m; dy /= m;
+    const nx = -dy * hw, ny = dx * hw;
+    const P = pts[k];
+    curPart.l.push({ x: P.x + nx, y: P.y + ny });
+    curPart.r.push({ x: P.x - nx, y: P.y - ny });
+    if (pts[k].split) {
+      curPart = { l: [{ x: P.x + nx, y: P.y + ny }], r: [{ x: P.x - nx, y: P.y - ny }] };
+      parts.push(curPart);
+    }
+  }
+
+  const pattern = bodyPattern();
+
+  for (const part of parts) {
+    if (part.l.length < 2) continue;
+    const poly = () => {
+      ctx.beginPath();
+      ctx.moveTo(part.l[0].x, part.l[0].y);
+      for (let k = 1; k < part.l.length; k++) ctx.lineTo(part.l[k].x, part.l[k].y);
+      for (let k = part.r.length - 1; k >= 0; k--) ctx.lineTo(part.r[k].x, part.r[k].y);
+      ctx.closePath();
+    };
+
+    // سایه روی زمین
+    ctx.save(); ctx.translate(3.5, 6); ctx.fillStyle = 'rgba(0,0,0,.30)'; poly(); ctx.fill(); ctx.restore();
+
+    // بدنه با بافت فلس
+    poly();
+    ctx.fillStyle = pattern; ctx.fill();
+    ctx.strokeStyle = '#122716'; ctx.lineWidth = 1.6; ctx.stroke();
+
+    // نوار شکمی روشن
+    ctx.save(); poly(); ctx.clip();
+    ctx.strokeStyle = 'rgba(216,224,180,.55)';
+    ctx.lineWidth = Math.max(2, widthAt(0.5) * 0.30);
+    ctx.beginPath();
+    for (let k = 0; k < part.l.length; k++) {
+      const a = part.l[k], b = part.r[k];
+      const px = lerp(a.x, b.x, 0.72), py = lerp(a.y, b.y, 0.72);
+      if (k === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    // خط پشتی تیره
+    ctx.strokeStyle = 'rgba(8,20,10,.55)'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let k = 0; k < part.l.length; k++) {
+      const a = part.l[k], b = part.r[k];
+      const px = (a.x + b.x) / 2, py = (a.y + b.y) / 2;
+      if (k === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    // نور لبه بالایی
+    ctx.strokeStyle = 'rgba(220,255,190,.22)'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let k = 0; k < part.l.length; k++) { if (k === 0) ctx.moveTo(part.l[k].x, part.l[k].y); else ctx.lineTo(part.l[k].x, part.l[k].y); }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  drawHead(sHead, dist);
+}
+
+function drawHead(sHead, dist) {
+  const hIdx = Math.floor(sHead), hf = sHead - hIdx;
+  const P = cellPos(hIdx, hf);
+  const P2 = cellPos(hIdx + 1, 0);
+  let dx = P2.x - P.x, dy = P2.y - P.y;
+  let m = Math.hypot(dx, dy);
+  if (m < 1e-6) { const Q = cellPos(hIdx - 1, 1); dx = P.x - Q.x; dy = P.y - Q.y; m = Math.hypot(dx, dy) || 1; }
+  dx /= m; dy /= m;
+  const nx = -dy, ny = dx;
+  const hw = headWidth() * 0.5;
+  const L = hw * 2.9;                     // طول سر
+  const dead = state === 'dead';
+
+  // سایه سر
+  ctx.save(); ctx.translate(3.5, 6);
+  headShape(dx, dy, nx, ny, hw, L, 'rgba(0,0,0,.30)', null); ctx.restore();
+
+  // سر
+  headShape(dx, dy, nx, ny, hw, L, '#33633a', '#122716');
+
+  // نقش پشت سر (لکه قطره‌ای)
+  ctx.save();
+  ctx.translate(P.x, P.y); ctx.rotate(Math.atan2(dy, dx));
+  ctx.fillStyle = 'rgba(16,34,18,.85)';
+  ctx.beginPath();
+  ctx.moveTo(L * 0.10, 0); ctx.quadraticCurveTo(-L * 0.10, hw * 0.55, -L * 0.34, 0);
+  ctx.quadraticCurveTo(-L * 0.10, -hw * 0.55, L * 0.10, 0); ctx.closePath(); ctx.fill();
+  // نوار پهن تیره روی سر
+  ctx.fillStyle = 'rgba(10,22,12,.45)';
+  ctx.beginPath(); ctx.ellipse(-L * 0.15, 0, L * 0.42, hw * 0.92, 0, 0, TAU); ctx.fill();
+  ctx.restore();
+
+  // چشم‌ها
+  const eyeAlong = L * 0.22, eyeAcross = hw * 0.78;
+  for (const sgn of [1, -1]) {
+    const ex = P.x + dx * eyeAlong + nx * eyeAcross * sgn;
+    const ey = P.y + dy * eyeAlong + ny * eyeAcross * sgn;
+    ctx.save(); ctx.translate(ex, ey); ctx.rotate(Math.atan2(dy, dx));
+    if (dead) {
+      ctx.strokeStyle = '#1a1a12'; ctx.lineWidth = 1.8;
+      ctx.beginPath(); ctx.moveTo(-2.6, -2.6); ctx.lineTo(2.6, 2.6); ctx.moveTo(2.6, -2.6); ctx.lineTo(-2.6, 2.6); ctx.stroke();
+    } else if (blinkOn > 0) {
+      ctx.strokeStyle = '#12250f'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-3.2, 0); ctx.quadraticCurveTo(0, 1.6, 3.2, 0); ctx.stroke();
+    } else {
+      ctx.fillStyle = '#f3e6b0'; ctx.beginPath(); ctx.ellipse(0, 0, 3.6, 3.2, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#d9a02c'; ctx.beginPath(); ctx.arc(0.2, 0, 2.6, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#0d0d0b';
+      ctx.beginPath(); ctx.ellipse(0.4, 0, 0.9, 2.2, 0, 0, TAU); ctx.fill();   // مردمک باریک
+      ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.beginPath(); ctx.arc(-1.2, -1.2, 0.8, 0, TAU); ctx.fill();
+      ctx.strokeStyle = 'rgba(10,20,10,.8)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(0, 0, 3.7, 3.3, 0, 0, TAU); ctx.stroke();
+      // ابروی سر (برای حالت طبیعی‌تر)
+      ctx.strokeStyle = 'rgba(12,26,14,.7)'; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.moveTo(-3.6, -2.4); ctx.quadraticCurveTo(0.5, -4.4, 3.8, -1.4); ctx.stroke();
+    }
+    ctx.restore();
+  }
+  // سوراخ‌های بینی
+  for (const sgn of [1, -1]) {
+    const px = P.x + dx * L * 0.82 + nx * hw * 0.4 * sgn;
+    const py = P.y + dy * L * 0.82 + ny * hw * 0.4 * sgn;
+    ctx.fillStyle = 'rgba(10,20,10,.75)'; ctx.beginPath(); ctx.arc(px, py, 1.1, 0, TAU); ctx.fill();
+  }
+
+  // زبان دوشاخه
+  if (!dead) {
+    const fl = Math.abs(Math.sin(gt * 5.6 + tongueT));
+    if (fl > 0.35) {
+      const ext = fl * hw * 2.1;
+      const bx = P.x + dx * L * 0.92, by = P.y + dy * L * 0.92;
+      const tipx = bx + dx * ext, tipy = by + dy * ext;
+      ctx.strokeStyle = '#c0304a'; ctx.lineWidth = 1.8; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(tipx, tipy); ctx.stroke();
+      for (const sgn of [1, -1]) {
+        ctx.beginPath(); ctx.moveTo(tipx, tipy);
+        ctx.quadraticCurveTo(tipx + dx * 4, tipy + dy * 4 + sgn * 2, tipx + dx * 8 + nx * sgn * 5, tipy + dy * 8 + ny * sgn * 5);
+        ctx.stroke();
+      }
+      ctx.lineCap = 'butt';
+    }
+  } else {
+    // زبان بیرون‌مانده در مرگ
+    const bx = P.x + dx * L * 0.92, by = P.y + dy * L * 0.92;
+    ctx.strokeStyle = '#a8304a'; ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx + dx * 12 + nx * 3, by + dy * 12 + ny * 3); ctx.stroke();
+  }
+}
+function headShape(dx, dy, nx, ny, hw, L, fill, stroke) {
+  const tipx = dx * L * 0.62, tipy = dy * L * 0.62;
+  const backx = -dx * L * 0.55, backy = -dy * L * 0.55;
+  ctx.beginPath();
+  ctx.moveTo(backx + nx * hw * 0.80, backy + ny * hw * 0.80);
+  ctx.bezierCurveTo(dx * L * 0.02 + nx * hw * 1.22, dy * L * 0.02 + ny * hw * 1.22,
+                    dx * L * 0.40 + nx * hw * 1.12, dy * L * 0.40 + ny * hw * 1.12,
+                    tipx, tipy);
+  ctx.bezierCurveTo(dx * L * 0.40 - nx * hw * 1.12, dy * L * 0.40 - ny * hw * 1.12,
+                    dx * L * 0.02 - nx * hw * 1.22, dy * L * 0.02 - ny * hw * 1.22,
+                    backx - nx * hw * 0.80, backy - ny * hw * 0.80);
+  ctx.closePath();
+  ctx.fillStyle = fill; ctx.fill();
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1.6; ctx.stroke(); }
+}
+
+/* ============================ افکت‌ها و HUD ============================ */
+function updateEffects(t) {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i]; p.t += dt;
+    if (p.t > p.life) { particles.splice(i, 1); continue; }
+    p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 260 * dt; p.vx *= 0.98;
+  }
+  for (let i = rings.length - 1; i >= 0; i--) {
+    const r = rings[i]; r.t += dt;
+    if (r.t > r.life) { rings.splice(i, 1); continue; }
+    r.r = lerp(6, r.max, r.t / r.life);
+  }
+}
+function drawEffects() {
+  for (const p of particles) {
+    const a = 1 - p.t / p.life;
+    ctx.fillStyle = p.col; ctx.globalAlpha = a; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, TAU); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  for (const r of rings) {
+    ctx.strokeStyle = r.col; ctx.globalAlpha = (1 - r.t / r.life) * 0.6; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, TAU); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  if (flashT > 0) { ctx.fillStyle = 'rgba(255,240,190,' + (flashT * 0.6).toFixed(3) + ')'; ctx.fillRect(0, 0, W, H); }
+}
+
+/* ============================ حلقه بازی ============================ */
+let last = performance.now(), dt = 0, gt = 0;
+function frame(now) {
+  let d = (now - last) / 1000; last = now;
+  dt = Math.min(0.05, Math.max(0.0005, d)); gt += dt;
+  step(dt); draw(gt);
+  requestAnimationFrame(frame);
+}
+function step(t) {
+  tongueT += t; blinkT -= t;
+  if (blinkOn > 0) { blinkOn = Math.max(0, blinkOn - t); }
+  else if (blinkT <= 0) { blinkOn = 0.14; blinkT = rr(2.4, 5.5); }
+  if (flashT > 0) flashT = Math.max(0, flashT - t);
+  if (shakeT > 0) shakeT = Math.max(0, shakeT - t);
+  if (scoreToastT > 0) scoreToastT = Math.max(0, scoreToastT - t);
+  if (comboT > 0) { comboT -= t; if (comboT <= 0) combo = 1; }
+  updateEffects(t);
+
+  if (state === 'playing') {
+    if (bonus) {
+      bonusTimer -= t;
+      if (bonusTimer <= 0) { bonus = null; }
+    }
+    tickT += t * 1000;
+    while (tickT >= tickDur) {
+      tickT -= tickDur;
+      stepHead();
+      if (state !== 'playing') { tickT = 0; break; }
+    }
+  } else if (state === 'dead') {
+    dieT += t;
+  }
+}
+function draw(t) {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  ctx.save();
+  if (shakeT > 0) {
+    const a = shakeT * 9;
+    ctx.translate(Math.sin(t * 60) * a, Math.cos(t * 47) * a);
+  }
+  ctx.drawImage(bg, 0, 0, W, H);
+  drawAmbient(t);
+  drawFoliageMotion(t);
+
+  // راهنمای خانه غذا
+  const target = bonus || null;
+  if (food) guideCell(food);
+  if (target) guideCell(target);
+
+  if (food) drawFood(food, false);
+  if (bonus) drawFood(bonus, true);
+
+  drawSnake();
+  drawEffects(t);
+
+  // امتیاز شناور
+  if (scoreToastT > 0) {
+    const hc = cells[cells.length - 1];
+    const x = (hc.x + .5) * CELL, y = (hc.y + .5) * CELL - (1.1 - scoreToastT) * 26;
+    ctx.globalAlpha = Math.min(1, scoreToastT * 2);
+    ctx.font = '700 18px "Segoe UI", Tahoma, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#1a2a14'; ctx.fillText(scoreToast, x + 1, y + 1);
+    ctx.fillStyle = '#ffe9a8'; ctx.fillText(scoreToast, x, y);
+    ctx.globalAlpha = 1;
+  }
+  // تاریکی ملایم هنگام پایان
+  if (state === 'dead') {
+    ctx.fillStyle = 'rgba(6,14,9,' + Math.min(0.45, dieT * 0.5).toFixed(3) + ')';
+    ctx.fillRect(0, 0, W, H);
+  }
+  ctx.restore();
+}
+function guideCell(f) {
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,255,255,.10)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(f.x * CELL + 6, f.y * CELL + 6, CELL - 12, CELL - 12);
+  ctx.restore();
+}
+
+/* ============================ رابط کاربری ============================ */
+const elScore = document.getElementById('score'), elBest = document.getElementById('best'),
+      elLen = document.getElementById('len'), elLevel = document.getElementById('level');
+const overlay = document.getElementById('overlay'), ovTitle = document.getElementById('ovTitle'),
+      ovText = document.getElementById('ovText'), ovBtn = document.getElementById('ovBtn');
+const toastEl = document.getElementById('toast'), speedSel = document.getElementById('speedSel'),
+      wrapChk = document.getElementById('wrapChk'), pauseBtn = document.getElementById('pauseBtn'),
+      muteBtn = document.getElementById('muteBtn'), restartBtn = document.getElementById('restartBtn');
+
+function hud() { elScore.textContent = fmt(score); elBest.textContent = fmt(best); elLen.textContent = fmt(len); elLevel.textContent = fmt(level); }
+let toastTimer = null;
+function toast(msg) {
+  toastEl.textContent = msg; toastEl.classList.add('on');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.remove('on'), 1800);
+}
+function showOverlay(title, text, btn) {
+  ovTitle.textContent = title; ovText.innerHTML = text; ovBtn.textContent = btn;
+  overlay.style.display = 'flex';
+}
+function hideOverlay() { overlay.style.display = 'none'; }
+
+function startGame() {
+  resetGame(); state = 'playing'; hideOverlay(); pauseBtn.textContent = 'مکث';
+  try { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch (e) {}
+}
+function togglePause() {
+  if (state === 'playing') {
+    state = 'paused';
+    showOverlay('⏸ مکث', 'بازی متوقف شد. برای ادامه دکمه ادامه را بزن یا <span class="kbd">Space</span> را بزن.', 'ادامه');
+  } else if (state === 'paused') {
+    state = 'playing'; hideOverlay();
+  }
+}
+ovBtn.addEventListener('click', () => {
+  if (state === 'paused') { state = 'playing'; hideOverlay(); pauseBtn.textContent = 'مکث'; }
+  else startGame();
+});
+pauseBtn.addEventListener('click', togglePause);
+restartBtn.addEventListener('click', startGame);
+muteBtn.addEventListener('click', () => { muted = !muted; muteBtn.textContent = 'صدا: ' + (muted ? 'خاموش' : 'روشن'); });
+speedSel.addEventListener('change', applySpeed);
+wrapChk.addEventListener('change', () => { toggleWrap(); wrapChk.checked = wrapOn; toast(wrapOn ? 'عبور از لبه‌ها فعال شد' : 'عبور از لبه‌ها خاموش شد'); });
+
+document.querySelectorAll('.dpad .btn').forEach(b => b.addEventListener('click', () => pushDir(b.dataset.dir)));
+
+const keyMap = {
+  ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
+  w: 'up', a: 'left', s: 'down', d: 'right', W: 'up', A: 'left', S: 'down', D: 'right'
+};
+window.addEventListener('keydown', e => {
+  if (keyMap[e.key]) { e.preventDefault(); if (state === 'menu' || state === 'dead') startGame(); else pushDir(keyMap[e.key]); return; }
+  if (e.key === ' ' || e.key === 'p' || e.key === 'P') {
+    e.preventDefault();
+    if (state === 'menu' || state === 'dead') startGame(); else togglePause();
+  }
+  if (e.key === 'Enter' && (state === 'menu' || state === 'dead')) startGame();
+});
+document.addEventListener('visibilitychange', () => { if (document.hidden && state === 'playing') togglePause(); });
+
+/* کشیدن انگشت روی موبایل */
+let tsx = 0, tsy = 0, swiped = false;
+cv.addEventListener('pointerdown', e => { tsx = e.clientX; tsy = e.clientY; swiped = false; });
+cv.addEventListener('pointermove', e => {
+  if (swiped) return;
+  const dx = e.clientX - tsx, dy = e.clientY - tsy;
+  if (Math.hypot(dx, dy) < 22) return;
+  swiped = true;
+  if (Math.abs(dx) > Math.abs(dy)) pushDir(dx > 0 ? 'right' : 'left');
+  else pushDir(dy > 0 ? 'down' : 'up');
+});
+
+/* شروع */
+fitCanvas();
+resetGame();
+showOverlay('🐍 مار جنگل',
+  'مار را در جنگل هدایت کن؛ سیب، توت و قارچ بخور و بزرگ‌تر شو.<br>به خودت و به حاشیه انبوه درختان نخور!<br><span class="keys">سیب طلایی ۱۰۰ امتیاز دارد ولی خیلی زود ناپدید می‌شود.</span>',
+  'شروع بازی');
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

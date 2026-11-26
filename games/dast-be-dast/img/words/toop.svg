@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img">
+  <defs><clipPath id="ballClip"><circle cx="80" cy="82" r="56"/></clipPath></defs>
+  <ellipse cx="82" cy="142" rx="44" ry="9" fill="#000" opacity="0.1"/>
+  <g clip-path="url(#ballClip)">
+    <circle cx="80" cy="82" r="56" fill="#fff4e0"/>
+    <path d="M80 26 C80 50 80 114 80 138 C114 114 114 50 80 26 Z" fill="#e4573d"/>
+    <path d="M80 26 C114 50 114 114 80 138 C140 114 140 50 80 26 Z" fill="#4e9be6"/>
+    <path d="M80 26 C140 50 140 114 80 138 C170 114 170 50 80 26 Z" fill="#f5d35a"/>
+    <path d="M80 26 C80 50 80 114 80 138 C46 114 46 50 80 26 Z" fill="#6fc26f"/>
+    <path d="M80 26 C46 50 46 114 80 138 C20 114 20 50 80 26 Z" fill="#f29b38"/>
+    <path d="M80 26 C20 50 20 114 80 138 C-10 114 -10 50 80 26 Z" fill="#a9d7f5"/>
+    <path d="M24 82 C24 120 136 120 136 82 L136 138 L24 138 Z" fill="#000" opacity="0.1"/>
+  </g>
+  <g fill="none" stroke="#5a4636" stroke-width="2" opacity="0.5" clip-path="url(#ballClip)">
+    <path d="M80 26 C114 50 114 114 80 138 M80 26 C140 50 140 114 80 138 M80 26 C46 50 46 114 80 138 M80 26 C20 50 20 114 80 138 M80 26 L80 138"/>
+  </g>
+  <circle cx="80" cy="82" r="56" fill="none" stroke="#5a4636" stroke-width="3.5"/>
+  <ellipse cx="60" cy="54" rx="12" ry="18" fill="#fff" opacity="0.5" transform="rotate(25 60 54)"/>
+</svg>

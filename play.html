@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>شهرِ بازی</title>
+<meta name="theme-color" content="#111111">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body class="play">
+<iframe class="stage" id="stage" title="game" allow="fullscreen; autoplay; gamepad; accelerometer; gyroscope" allowfullscreen></iframe>
+
+<div class="dock" id="dock">
+  <button class="tab" id="tab" aria-expanded="false" aria-controls="bar" aria-label="menu">☰</button>
+  <div class="bar" id="bar" hidden>
+    <a class="btn small" id="home" href="./" data-i18n="home">🏠 خانه</a>
+    <a class="btn small yellow" id="idea" href="feedback.html" data-i18n="ideaShort">💡 ایده</a>
+    <button class="btn small" id="full" data-i18n="full">⛶ تمام‌صفحه</button>
+    <button class="btn small" id="close" aria-label="close" data-i18n="close">✕</button>
+  </div>
+</div>
+
+<div class="lost" id="lost" hidden>
+  <div>
+    <p style="font-size:60px;line-height:1.2">🤔</p>
+    <h1 style="font-size:28px;font-weight:900;margin-bottom:16px" data-i18n="notFound">این بازی پیدا نشد.</h1>
+    <a class="btn big green" href="./" data-i18n="backHome">برگرد به شهرِ بازی</a>
+  </div>
+</div>
+
+<script type="module" src="js/play.js"></script>
+</body>
+</html>

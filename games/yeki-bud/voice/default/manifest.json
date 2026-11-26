@@ -1,0 +1,229 @@
+{
+  "label": "default",
+  "language": "fa",
+  "created": "2026-10-25T04:20:14.494Z",
+  "clips": [
+    {
+      "key": "nokhodi.cheer.1",
+      "file": "nokhodi.cheer.1.m4a",
+      "duration": 0.72,
+      "hash": "6378a44a88704fcf6ba07f0e57fd80bc2e932c44aaf7267c53d29b0c72646302"
+    },
+    {
+      "key": "nokhodi.cheer.2",
+      "file": "nokhodi.cheer.2.m4a",
+      "duration": 0.61,
+      "hash": "dc829e427337dfb9aa80ba3b308ed8577079a2c4f61bfdac75b0ce59c0313214"
+    },
+    {
+      "key": "nokhodi.cheer.3",
+      "file": "nokhodi.cheer.3.m4a",
+      "duration": 0.56,
+      "hash": "125a178fc98f40ecf1b22df1ebbaa43ae4b293d1ddf3980e66346c37841b76a5"
+    },
+    {
+      "key": "nokhodi.gate",
+      "file": "nokhodi.gate.m4a",
+      "duration": 1.44,
+      "hash": "e449504e5c2927ff3508d910b04fd3eaa836468dc11fca1b0148f47a05818cf8"
+    },
+    {
+      "key": "nokhodi.hello",
+      "file": "nokhodi.hello.m4a",
+      "duration": 0.679,
+      "hash": "e9aaac3f8431fc6950004cf1426245879b94a3aa2886dd0e33c6addcfc25d2cc"
+    },
+    {
+      "key": "nokhodi.question",
+      "file": "nokhodi.question.m4a",
+      "duration": 0.878,
+      "hash": "c99952678a90218d56a72a1a73cde134a54c3e754776033db49930ffcbb5299f"
+    },
+    {
+      "key": "nokhodi.retry",
+      "file": "nokhodi.retry.m4a",
+      "duration": 0.97,
+      "hash": "3bdb636c8764cbb7feae0009d37a964df502aa618ce9bfea2a47ef60021b7339"
+    },
+    {
+      "key": "nokhodi.sleepy",
+      "file": "nokhodi.sleepy.m4a",
+      "duration": 0.98,
+      "hash": "e5af59b7fd97549e96cab62615e58c6a72330996882d10c30e0ffeb9683b4025"
+    },
+    {
+      "key": "nokhodi.thanks",
+      "file": "nokhodi.thanks.m4a",
+      "duration": 0.5,
+      "hash": "b6072d53751a4aabbf5d56489ef23ca69652eb25e454c3316d070e92eb51c646"
+    },
+    {
+      "key": "number.0",
+      "file": "number.0.m4a",
+      "duration": 0.7,
+      "hash": "452d1bcd97ee8329c0d02cbb17a8b19109b8e7d21235083821a2717cb9ca7141"
+    },
+    {
+      "key": "number.1",
+      "file": "number.1.m4a",
+      "duration": 0.5,
+      "hash": "014c2351f5d71bb8e35e2cda72348d6d63a85e11d7b2a3e35add92ea662a0db5"
+    },
+    {
+      "key": "number.10",
+      "file": "number.10.m4a",
+      "duration": 0.42,
+      "hash": "3202cefb5f7fed724af9335b395385dd17b495db303b975042f879c55a8bd20d"
+    },
+    {
+      "key": "number.2",
+      "file": "number.2.m4a",
+      "duration": 0.44,
+      "hash": "78f732f25e2f7615a27dbd4ae7c7631ce1e2643c37146786c27596040c76246b"
+    },
+    {
+      "key": "number.3",
+      "file": "number.3.m4a",
+      "duration": 0.77,
+      "hash": "ccc5e3aa9a8db8ab044ffe9f9715e7c6f4a61596442bffedd73da7d8434855ea"
+    },
+    {
+      "key": "number.4",
+      "file": "number.4.m4a",
+      "duration": 0.5,
+      "hash": "76160c76e4a775e3b9e5cb3c5190812687e118f19cc3c462e8be70977d6fed6c"
+    },
+    {
+      "key": "number.5",
+      "file": "number.5.m4a",
+      "duration": 0.61,
+      "hash": "49855d7ccabf06e353429a055509df72a4c949c97a3ef478e4c1a5fe2b3bf099"
+    },
+    {
+      "key": "number.6",
+      "file": "number.6.m4a",
+      "duration": 0.67,
+      "hash": "92a3233819333274a00476289f91b064fac23aebeba4da5036edb7efe80e863f"
+    },
+    {
+      "key": "number.7",
+      "file": "number.7.m4a",
+      "duration": 0.75,
+      "hash": "b1887c3e5895dad16ac38c51b4882626caaa16b83e5fe669d89fc5b9bf122149"
+    },
+    {
+      "key": "number.8",
+      "file": "number.8.m4a",
+      "duration": 0.76,
+      "hash": "bfc8424e79e3e9774f6886792ba7f7bb000272fa82529ee9841c821ffb457727"
+    },
+    {
+      "key": "number.9",
+      "file": "number.9.m4a",
+      "duration": 0.52,
+      "hash": "70a09b1624a12866c0dae2e99a21919b0f1f543324279458e8b555b955894438"
+    },
+    {
+      "key": "yekibud.intro",
+      "file": "yekibud.intro.m4a",
+      "duration": 1.71,
+      "hash": "6d8368a2462101b63a08afce0ba7f32522861da9f85ccf3cdde619d964eb8364"
+    },
+    {
+      "key": "yekibud.hint.door",
+      "file": "yekibud.hint.door.m4a",
+      "duration": 1.03,
+      "hash": "64b082ea89140912429c944c72068f73e63a03dc863d1165fb7839894bd6b2e2"
+    },
+    {
+      "key": "yekibud.hint.join",
+      "file": "yekibud.hint.join.m4a",
+      "duration": 1.46,
+      "hash": "6602d2ce05bb229206f206e1490409b3d883e83e430ed2d391966722a3676338"
+    },
+    {
+      "key": "yekibud.hint.split",
+      "file": "yekibud.hint.split.m4a",
+      "duration": 1.62,
+      "hash": "8db8e0a5d36f407054aa8a29f83c5470064d91a34f8602378f0e04a3727e01b5"
+    },
+    {
+      "key": "yekibud.hint.bridge",
+      "file": "yekibud.hint.bridge.m4a",
+      "duration": 0.98,
+      "hash": "afe7ba77905aca5a0d2e7874e236a084423895ac5e225fb28c4b9f1a1fa0cd77"
+    },
+    {
+      "key": "yekibud.full",
+      "file": "yekibud.full.m4a",
+      "duration": 2.216,
+      "hash": "868abc947a16ed16e0439e818aacab901938ce93a30755c912402030d83e1929"
+    },
+    {
+      "key": "yekibud.new",
+      "file": "yekibud.new.m4a",
+      "duration": 1.584,
+      "hash": "34bb285ac017735dbfd0437992fdf7400b8f2c8b837ecd0a7b3a5bc3e2912dbe"
+    },
+    {
+      "key": "yekibud.tooTall",
+      "file": "yekibud.tooTall.m4a",
+      "duration": 1.67,
+      "hash": "0cfe224674168bec7d905202d0bae9ae72da1d047e9d1ff545e2356bca72a8e4"
+    },
+    {
+      "key": "yekibud.ten",
+      "file": "yekibud.ten.m4a",
+      "duration": 2,
+      "hash": "2d8fa2d7b66589c81d1efb35d38e6b0588bef2909fc957735850f5d1b1ec2352"
+    },
+    {
+      "key": "yekibud.nine.no",
+      "file": "yekibud.nine.no.m4a",
+      "duration": 0.57,
+      "hash": "c7544d3835d782f09ed176c158c09e1f189924b1d8f0a9724708ab65c258383e"
+    },
+    {
+      "key": "yekibud.goodnight",
+      "file": "yekibud.goodnight.m4a",
+      "duration": 1.72,
+      "hash": "0b6243c48cc1c97997e1e328180474d43934a4f6fc9c6d308bf1a4c61f08ea8d"
+    },
+    {
+      "key": "yekibud.hidden",
+      "file": "yekibud.hidden.m4a",
+      "duration": 1.35,
+      "hash": "e4da5f421bed94cc68acfe8317b3853af2c209172557d4d966687faf6bfc1843"
+    },
+    {
+      "key": "yekibud.hint.hidden",
+      "file": "yekibud.hint.hidden.m4a",
+      "duration": 1.83,
+      "hash": "8947a8936e1fd93137c3b80ad1b4687eb02f1e297dc6895b5667729b7b6e34e4"
+    },
+    {
+      "key": "yekibud.makes",
+      "file": "yekibud.makes.m4a",
+      "duration": 0.79,
+      "hash": "a9ef76a730a3a407c26dc5b3e708d1339d659a4d136a81882dc21427c6049ed9"
+    },
+    {
+      "key": "yekibud.peek",
+      "file": "yekibud.peek.m4a",
+      "duration": 1.02,
+      "hash": "9582bace3eeaf42329b0e329ea4be9c685ecd3cd96a12d28c932d435f648c1b6"
+    },
+    {
+      "key": "yekibud.plus",
+      "file": "yekibud.plus.m4a",
+      "duration": 0.63,
+      "hash": "cc680b213f9edb381a10eba0396e35d5d17b88076a01a968e3d6a373b3196fb7"
+    },
+    {
+      "key": "yekibud.minus",
+      "file": "yekibud.minus.m4a",
+      "duration": 0.94,
+      "hash": "4c3db7cdc8f7437dd65e511d7ee83ed4819676b71f85948ca9b51ff00296c5e9"
+    }
+  ]
+}
